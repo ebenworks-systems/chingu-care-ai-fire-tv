@@ -77,8 +77,9 @@ function Postcard({ uri }: { uri: string }) {
 | Export | What it does |
 | --- | --- |
 | `CareFocusable` | `Pressable` with a ring, scale and shadow on focus; takes `look` to change the ring colour and a `label` for screen readers |
+| `CareText live` | Text that screen readers such as VoiceView and TalkBack read aloud when it changes; reminders are also announced the moment they appear |
 | `focusStyle`, `contrastRatio` | The focus look as a plain style object, and a WCAG contrast check for ring colours |
-| `TypeScaleProvider`, `CareText`, `typeSize` | Roles `display`, `title`, `heading`, `body`, `label`, `caption`; sizes `large`, `larger`, `largest`; fonts per role |
+| `TypeScaleProvider`, `CareText`, `typeSize` | Roles `display`, `title`, `heading`, `body`, `label`, `caption`; sizes `large`, `larger`, `largest`; fonts per role; scaled to the screen's width |
 | `InterruptProvider`, `useInterrupts` | `raise(interrupt)`, `answer(actionId)`, the queue and the active reminder |
 | `useInterruptibleMedia(id, player)` | Registers a player so reminders pause and resume it |
 | `InterruptOverlay` | A ready overlay that traps the remote's focus, or pass `render` to draw your own |
