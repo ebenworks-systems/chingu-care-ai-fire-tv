@@ -18,6 +18,8 @@ export function useSpeech() {
   const speak = useCallback(
     (text: string) => {
       stop();
+      // The hub's voice is English only; Korean lines stay on screen in large type.
+      if (/[\uac00-\ud7a3]/.test(text)) return;
       const p = createAudioPlayer({ uri: api.ttsUrl(text) });
       player.current = p;
       setSpeaking(true);

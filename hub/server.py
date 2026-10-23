@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -83,7 +83,8 @@ class Hub:
         self.log: list[dict] = saved.get("log") or hh.routine_log(today=hub_now().date())
         today = self._today_entry()
         self.today: dict = {"tv_on": today.get("tv_on"), "checkin": today.get("checkin")}
-        self.doses: dict[str, dict] = {m["id"]: {"status": "due", "at": None} for m in hh.MEDICINES}
+        self._doses: dict[str, dict] = {}
+        self.doses_day = None
         self.messages = [
             {
                 "id": f"m{i}",
@@ -99,6 +100,15 @@ class Hub:
         ]
         self.notes: list[dict] = saved.get("notes", [])
         self.timeline: list[dict] = []
+
+    @property
+    def doses(self) -> dict[str, dict]:
+        """Today's doses; a new day in the household starts every medicine as due again."""
+        day = hub_now().date()
+        if self.doses_day != day:
+            self.doses_day = day
+            self._doses = {m["id"]: {"status": "due", "at": None} for m in hh.MEDICINES}
+        return self._doses
 
     def _today_entry(self) -> dict:
         day = hub_now().date()
@@ -400,6 +410,9 @@ async def tts(text: str):
     text = text.strip()[:600]
     if not text:
         raise HTTPException(400, "empty text")
+    if any("\uac00" <= ch <= "\ud7a3" for ch in text):
+        # The bundled voice speaks English only; Korean lines are shown in large type, not read badly.
+        return Response(status_code=204)
     path = await asyncio.to_thread(_tts_file, text)
     # A record of what the TV was told to say and when, used to put the same audio in the demo film.
     with open(CACHE.parent / "spoken.jsonl", "a", encoding="utf-8") as log:

@@ -18,6 +18,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -144,6 +145,12 @@ for e in events:
         voices.append((e["t"] + e["lead"], e["t"] + e["lead"] + 3.5))
 for s in spoken:
     voices.append((s["at"] + PLAYBACK_LATENCY, s["at"] + PLAYBACK_LATENCY + s["secs"]))
+# Presses on the remote are kept where the film shows the remote at work: the tour of the
+# home screen and the choice of a suggested answer. Elsewhere walks of focus are shortened.
+showcase = [(start, first("narration", id="n02")["t"]), (chip_n["t"], chip_ok["t"] + 0.2)]
+for e in events:
+    if e["kind"] == "key" and any(a <= e["t"] <= b for a, b in showcase):
+        voices.append((e["t"] - 0.9, e["t"] + 1.0))
 voices.sort()
 edge = start + 1.0
 for a, b in voices:
@@ -236,16 +243,21 @@ for a, b in zip(bounds, bounds[1:]):
         pt = max(0.0, a - phone_start)
         x, y, w, h = TV_BOX
         px, py, pw, ph = PH_BOX
-        graph = (f"[1:v]scale={w}:{h}[tv];[2:v]crop=780:1280:0:0,scale={pw}:{ph}[ph];[0:v][tv]overlay={x}:{y}[s1];"
-                 f"[s1][ph]overlay={px}:{py}[s2];[s2][3:v]overlay=0:0,format=yuv420p[v]")
-        run(["-loop", "1", "-t", f"{b - a:.3f}", "-i", TMP / "split-bg.png", "-ss", f"{vt:.3f}", "-t", f"{b - a:.3f}", "-i", tv_cfr,
-             "-ss", f"{pt:.3f}", "-t", f"{b - a:.3f}", "-i", phone_cfr, "-loop", "1", "-t", f"{b - a:.3f}", "-i", TMP / "split-fg.png",
-             "-filter_complex", graph, "-map", "[v]", "-r", FPS, "-t", f"{b - a:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
+        d = b - a
+        graph = (f"[1:v]trim=start={vt:.3f}:duration={d:.3f},setpts=PTS-STARTPTS,scale={w}:{h}[tv];"
+                 f"[2:v]trim=start={pt:.3f}:duration={d:.3f},setpts=PTS-STARTPTS,crop=780:1280:0:0,scale={pw}:{ph}[ph];"
+                 f"[0:v][tv]overlay={x}:{y}:eof_action=repeat[s1];[s1][ph]overlay={px}:{py}:eof_action=repeat[s2];"
+                 f"[s2][3:v]overlay=0:0,format=yuv420p[v]")
+        run(["-loop", "1", "-t", f"{d:.3f}", "-i", TMP / "split-bg.png", "-i", tv_cfr, "-i", phone_cfr,
+             "-loop", "1", "-t", f"{d:.3f}", "-i", TMP / "split-fg.png",
+             "-filter_complex", graph, "-map", "[v]", "-r", FPS, "-t", f"{d:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
     else:
         x, y, w, h = FULL_BOX
-        run(["-ss", f"{vt:.3f}", "-t", f"{b - a:.3f}", "-i", tv_cfr, "-f", "lavfi", "-t", f"{b - a:.3f}", "-i", f"color=c={CANVAS}:s=1920x1080:r={FPS}",
-             "-filter_complex", f"[0:v]scale={w}:{h}[tv];[1:v][tv]overlay={x}:{y},format=yuv420p[v]", "-map", "[v]", "-r", FPS,
-             "-t", f"{b - a:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
+        d = b - a
+        run(["-i", tv_cfr, "-f", "lavfi", "-t", f"{d:.3f}", "-i", f"color=c={CANVAS}:s=1920x1080:r={FPS}",
+             "-filter_complex", f"[0:v]trim=start={vt:.3f}:duration={d:.3f},setpts=PTS-STARTPTS,scale={w}:{h}[tv];"
+             f"[1:v][tv]overlay={x}:{y}:eof_action=repeat,format=yuv420p[v]", "-map", "[v]", "-r", FPS,
+             "-t", f"{d:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
     pieces.append(out)
 body_len = film_time(stop)
 
@@ -291,7 +303,7 @@ for i, (wav, at, gain, _, _) in enumerate(clips, 1):
     ms = max(0, int(at * 1000))
     graph.append(f"[{i}:a]aresample=48000,aformat=channel_layouts=mono,volume={gain}dB,adelay={ms}|{ms}[a{i}]")
 mix = "".join(f"[a{i}]" for i in range(1, len(clips) + 1))
-graph.append(f"{mix}amix=inputs={len(clips)}:normalize=0:dropout_transition=0,apad=whole_dur={total:.3f},loudnorm=I=-16:TP=-1.5:LRA=11[aud]")
+graph.append(f"{mix}amix=inputs={len(clips)}:normalize=0:dropout_transition=0,apad=whole_dur={total:.3f},loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[aud]")
 
 
 # --- 6. Captions -------------------------------------------------------------------------
@@ -319,7 +331,8 @@ WrapStyle: 0
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Cap,Pretendard,40,&H00523D1C,&H00523D1C,&H00FFFFFF,&H20FFFFFF,1,0,0,0,100,100,0,0,3,16,0,2,240,240,30,1
-Style: Key,Pretendard,30,&H00FFFFFF,&H00FFFFFF,&H003A61C4,&H003A61C4,1,0,0,0,100,100,0,0,3,10,0,1,40,40,40,1
+Style: Key,Pretendard,38,&H00FFFFFF,&H00FFFFFF,&H003A61C4,&H003A61C4,1,0,0,0,100,100,0,0,3,12,0,1,40,40,34,1
+Style: Where,Pretendard,22,&H00726B5E,&H00726B5E,&H00EEF5FA,&H00EEF5FA,0,0,0,0,100,100,0,0,1,0,0,3,40,40,14,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -329,14 +342,15 @@ keys = []
 for e in events:
     if e["kind"] == "key" and in_keep(e["t"] - 0.7):
         at = film_time(e["t"] - 0.7)
-        keys.append((at, at + 0.8, f"Remote · {KEY_NAMES.get(e['key'], e['key'])}"))
+        keys.append((at, at + 1.4, f"Remote · {KEY_NAMES.get(e['key'], e['key'])}"))
 for i in range(len(keys) - 1):
     a, b, text = keys[i]
     keys[i] = (a, min(b, keys[i + 1][0] - 0.02), text)
 (TMP / "captions.ass").write_text(
     head
     + "".join(f"Dialogue: 0,{stamp(a)},{stamp(b)},Cap,,0,0,0,,{t}\n" for a, b, t in caps)
-    + "".join(f"Dialogue: 1,{stamp(a)},{stamp(b)},Key,,0,0,0,,{t}\n" for a, b, t in keys),
+    + "".join(f"Dialogue: 1,{stamp(a)},{stamp(b)},Key,,0,0,0,,{t}\n" for a, b, t in keys)
+    + f"Dialogue: 0,{stamp(0)},{stamp(body_len)},Where,,0,0,0,,Running on an Android TV emulator · Android 11, the base of Fire OS 8\n",
     encoding="utf-8",
 )
 with open(OUT.with_suffix(".srt"), "w", encoding="utf-8") as srt:
@@ -348,8 +362,13 @@ for f in FONTS.glob("*.otf"):
     target = fontsdir / f.name
     if not target.exists():
         target.write_bytes(f.read_bytes())
-graph.append(f"[0:v]ass={TMP}/captions.ass:fontsdir={fontsdir}[vid]")
-run([*inputs, "-filter_complex", ";".join(graph), "-map", "[vid]", "-map", "[aud]", "-t", f"{total:.3f}",
-     "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+# The sound is mixed to a file of its own first, so its length can be checked against the picture.
+sound = TMP / "sound.wav"
+run([*inputs, "-filter_complex", ";".join(graph), "-map", "[aud]", "-t", f"{total:.3f}", "-c:a", "pcm_s16le", sound])
+if abs(ffprobe_duration(sound) - total) > 0.2:
+    sys.exit(f"the sound is {ffprobe_duration(sound):.1f} s, the picture {total:.1f} s")
+run(["-i", video, "-i", sound, "-filter_complex", f"[0:v]ass={TMP}/captions.ass:fontsdir={fontsdir}[vid]",
+     "-map", "[vid]", "-map", "1:a", "-t", f"{total:.3f}",
+     "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
      "-movflags", "+faststart", OUT])
 print(f"{OUT}: {ffprobe_duration(OUT):.1f} s ({body_len:.1f} s of footage, {len(keep)} kept spans, {len(clips)} sound clips)")

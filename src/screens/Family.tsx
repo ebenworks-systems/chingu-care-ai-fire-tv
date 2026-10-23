@@ -64,7 +64,10 @@ function Postcard({ s, msg, onBack }: { s: Strings; msg: Message; onBack: () => 
     <View style={{ flex: 1, flexDirection: "row", gap: 28 }}>
       <View style={styles.stage}>
         {msg.video ? (
-          <VideoPostcard s={s} uri={api.media(msg.video)} />
+          <>
+            {msg.photo ? <Image source={{ uri: api.media(msg.photo) }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+            <VideoPostcard s={s} uri={api.media(msg.video)} />
+          </>
         ) : msg.photo ? (
           <Image source={{ uri: api.media(msg.photo) }} style={StyleSheet.absoluteFill} contentFit="cover" />
         ) : null}

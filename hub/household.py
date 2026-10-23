@@ -37,7 +37,7 @@ MEDICINES = [
 POSTCARDS = [
     {
         "from": "jiwoo",
-        "text": "A walk by the river for you, Mom. Same path as your visit.",
+        "text": "My morning walk for you, Mom: the river path from your visit, then the persimmons.",
         "photo": "/media/river.jpg",
         "video": "/media/jiwoo-postcard.mp4",
         "minutes_ago": 35,

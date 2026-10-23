@@ -6,8 +6,8 @@
 //
 //   SERIAL=emulator-5560 HUB=http://localhost:8797 node tools/video/record.cjs
 //
-// Needs: the hub running (REMINDER_CLOCK=off, a fresh start), the release app open on the
-// emulator's home screen, the emulator started with -grpc 8566 (for the microphone), and
+// Needs: the hub running (REMINDER_CLOCK=off, a fresh start), the release app installed (the
+// script restarts it), the emulator started with -grpc 8566 (for the microphone), and
 // playwright-core (npm i --no-save playwright-core) with Google Chrome installed.
 const { execFileSync, spawn } = require("child_process");
 const fs = require("fs");
@@ -72,6 +72,12 @@ async function speakIntoMic(id) {
 const post = (p, body) => fetch(HUB + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
 
 (async () => {
+  // A fresh start of the app, so no focus is remembered from an earlier run.
+  const APP = "co.ebenworks.chingucare.tv";
+  adb("shell", "am", "force-stop", APP);
+  adb("shell", "monkey", "-p", APP, "-c", "android.intent.category.LEANBACK_LAUNCHER", "1");
+  await sleep(8);
+
   // The family's phone: Ji-woo's page, captured four times a second.
   const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome", headless: true });
   const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
@@ -104,7 +110,13 @@ const post = (p, body) => fetch(HUB + p, { method: "POST", headers: { "Content-T
 
   // 1. Home: the demo household.
   mark("scene", { name: "home" });
-  await narrate("n01", 0.6);
+  mark("narration", { id: "n01" });
+  const n01at = now();
+  await sleep(2.2);
+  await key("down"); // I'm OK
+  await key("right"); // Help
+  await key("up"); // back to Today's check-in
+  await sleep(Math.max(0.4, n01at + LENGTHS.n01 + 0.6 - now()));
   await narrate("n02", 0.6);
 
   // 2. Check-in by voice.

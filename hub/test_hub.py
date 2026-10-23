@@ -128,3 +128,17 @@ def test_today_is_written_into_the_routine_log():
     client.post("/api/activity/tv-on")
     today = [d for d in hub.log if d["date"] == datetime.now().date().isoformat()]
     assert today and today[0]["tv_on"] == hub.today["tv_on"]
+
+
+def test_each_new_day_starts_every_medicine_as_due(monkeypatch):
+    import server
+
+    client.post("/api/medicine/bp/taken")
+    assert server.hub.doses["bp"]["status"] == "taken"
+    tomorrow = server.hub_now() + server.timedelta(days=1)
+    monkeypatch.setattr(server, "hub_now", lambda: tomorrow)
+    assert server.hub.doses["bp"]["status"] == "due"
+
+
+def test_korean_lines_are_not_sent_to_the_english_voice():
+    assert client.get("/api/tts", params={"text": "안녕하세요, AI 친구입니다."}).status_code == 204

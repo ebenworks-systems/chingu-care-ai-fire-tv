@@ -71,7 +71,7 @@ def architecture():
 def kit():
     im, d = new()
     d.text((110, 150), "tv-care-kit", font=SERIF(104), fill=NAVY)
-    d.text((114, 290), "Open source · MIT · 17 tests · v0.1.1", font=SEMI(40), fill=PERSIMMON)
+    d.text((114, 290), "Open source · MIT · 21 tests · v0.1.2", font=SEMI(40), fill=PERSIMMON)
     items = [
         ("Focus you can see from the sofa", "Size, ring and lift, not colour alone"),
         ("A 10-foot type scale", "Six roles, nothing under 18 dp, two steps up"),

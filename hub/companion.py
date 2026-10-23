@@ -231,7 +231,7 @@ class Companion:
         if not result or not result.get("body"):
             said = [t["content"] for t in session.turns if t["role"] == "user"]
             result = {
-                "body": f"{first} talked with Chingu for a few minutes and answered {len(said)} questions about her day.",
+                "body": f"{first} talked with Chingu Care AI for a few minutes and answered {len(said)} questions about the day.",
                 "mood_signal": None,
                 "flags": [],
                 "includes_health": False,
