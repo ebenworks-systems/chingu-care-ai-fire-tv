@@ -28,6 +28,7 @@ from companion import Companion, Session
 
 ROOT = Path(__file__).parent
 CACHE = ROOT / ".cache" / "tts"
+DATA = ROOT / ".data"  # the household's routine and recent notes; HUB_MEMORY=off keeps them in memory only
 CACHE.mkdir(parents=True, exist_ok=True)
 VOICE = Path(os.environ.get("PIPER_VOICE", ROOT / "voices" / "en_US-ljspeech-high.onnx"))
 MAX_UPLOAD = 8 * 1024 * 1024
@@ -49,7 +50,9 @@ def hub_now() -> datetime:
 async def lifespan(_app: FastAPI):
     # REMINDER_CLOCK=off leaves reminders to /api/demo/remind, for a recorded demo with exact timing.
     clock = None if os.environ.get("REMINDER_CLOCK") == "off" else asyncio.create_task(reminder_clock())
+    watch = asyncio.create_task(routine_watch())
     yield
+    watch.cancel()
     if clock:
         clock.cancel()
 
@@ -74,8 +77,12 @@ class Hub:
         self.cond = asyncio.Condition()
         self.sessions: dict[str, Session] = {}
         self.lang = "en"
-        self.log = hh.routine_log(today=hub_now().date())
-        self.today: dict = {"tv_on": None, "checkin": None}
+        self.data = DATA / "household.json"
+        saved = json.loads(self.data.read_text()) if self.data.exists() else {}
+        # The routine log: 14 invented demo days on first run, then each real day the TV records.
+        self.log: list[dict] = saved.get("log") or hh.routine_log(today=hub_now().date())
+        today = self._today_entry()
+        self.today: dict = {"tv_on": today.get("tv_on"), "checkin": today.get("checkin")}
         self.doses: dict[str, dict] = {m["id"]: {"status": "due", "at": None} for m in hh.MEDICINES}
         self.messages = [
             {
@@ -90,8 +97,29 @@ class Hub:
             }
             for i, p in enumerate(hh.POSTCARDS)
         ]
-        self.notes: list[dict] = []
+        self.notes: list[dict] = saved.get("notes", [])
         self.timeline: list[dict] = []
+
+    def _today_entry(self) -> dict:
+        day = hub_now().date()
+        for entry in self.log:
+            if entry["date"] == day.isoformat():
+                return entry
+        entry = {"date": day.isoformat(), "weekend": day.weekday() >= 5, "tv_on": None, "checkin": None}
+        self.log.append(entry)
+        return entry
+
+    def record_today(self, key: str, hhmm: str) -> None:
+        """Write today's TV-on or check-in time into the routine log and keep it on disk."""
+        self._today_entry()[key] = hhmm
+        self.today[key] = hhmm
+        self.save()
+
+    def save(self) -> None:
+        if os.environ.get("HUB_MEMORY") == "off":
+            return
+        DATA.mkdir(parents=True, exist_ok=True)
+        self.data.write_text(json.dumps({"log": self.log[-60:], "notes": self.notes[:20]}, ensure_ascii=False, indent=1))
 
     async def emit(self, kind: str, data: dict, audience: str = "all") -> dict:
         async with self.cond:
@@ -160,7 +188,7 @@ async def set_lang(body: LangIn):
 async def tv_on():
     """The TV app reports that it came to the front: the routine's signal for today."""
     if not hub.today["tv_on"]:
-        hub.today["tv_on"] = hub_now().strftime("%H:%M")
+        hub.record_today("tv_on", hub_now().strftime("%H:%M"))
         await hub.emit("tv_on", {"at": hub.today["tv_on"]}, audience="family")
     return hub.today
 
@@ -176,7 +204,12 @@ class TurnIn(BaseModel):
 @app.post("/api/checkin/start")
 async def checkin_start():
     sid = uuid.uuid4().hex[:12]
-    session = Session(id=sid, lang=hub.lang)
+    session = Session(
+        id=sid,
+        lang=hub.lang,
+        memory=[{"at": n["at"], "body": n["body"]} for n in hub.notes[:3]],
+        now=hub_now().strftime("%A %d %B %Y, %H:%M"),
+    )
     hub.sessions[sid] = session
     opened = await companion.open(session)
     return {"session": sid, **opened}
@@ -218,7 +251,7 @@ async def checkin_end(body: EndIn):
         }
     )
     hub.notes.insert(0, note)
-    hub.today["checkin"] = hub_now().strftime("%H:%M")
+    hub.record_today("checkin", hub_now().strftime("%H:%M"))
     await hub.emit("note", note, audience="family")
     return note
 
@@ -245,7 +278,7 @@ async def help_alert():
 async def taken(mid: str):
     if mid not in hub.doses:
         raise HTTPException(404, "no such medicine")
-    hub.doses[mid] = {"status": "taken", "at": hub_now().strftime("%H:%M")}
+    hub.doses[mid] = {"status": "taken", "at": hub_now().strftime("%H:%M"), "reminded_at": hub.doses[mid].get("reminded_at")}
     med = next(m for m in hh.MEDICINES if m["id"] == mid)
     await hub.emit("taken", {"id": mid, "name": med["name"], "at": hub.doses[mid]["at"]}, audience="family")
     return hub.doses[mid]
@@ -255,7 +288,7 @@ async def taken(mid: str):
 async def snooze(mid: str):
     if mid not in hub.doses:
         raise HTTPException(404, "no such medicine")
-    hub.doses[mid] = {"status": "snoozed", "at": (hub_now() + timedelta(minutes=10)).strftime("%H:%M")}
+    hub.doses[mid] = {"status": "snoozed", "at": (hub_now() + timedelta(minutes=hh.SNOOZE_MINUTES)).strftime("%H:%M")}
     return hub.doses[mid]
 
 
@@ -265,21 +298,35 @@ async def demo_remind(mid: str):
     med = next((m for m in hh.MEDICINES if m["id"] == mid), None)
     if not med:
         raise HTTPException(404, "no such medicine")
-    hub.doses[mid] = {"status": "due", "at": None}
+    hub.doses[mid] = {"status": "due", "at": None, "reminded_at": hub_now().isoformat(timespec="seconds")}
     await hub.emit("reminder", med, audience="tv")
     return med
 
 
-async def reminder_clock():
-    """Fires each medicine reminder once at its set time (parent's local time)."""
-    fired: set[str] = set()
+async def routine_watch():
+    """Once a day, a gentle note to the family if the TV stays off past the learned hour."""
+    sent_for = None
     while True:
         now = hub_now()
-        for med in hh.MEDICINES:
-            key = f'{now.date()}-{med["id"]}'
-            if med["time"] == now.strftime("%H:%M") and key not in fired and hub.doses[med["id"]]["status"] != "taken":
-                fired.add(key)
+        note = hh.quiet_tv_note(hh.learn_routine(hub.log, now=now), hub.today["tv_on"], now)
+        if note and sent_for != now.date():
+            sent_for = now.date()
+            await hub.emit("quiet", note, audience="family")
+        await asyncio.sleep(30)
+
+
+async def reminder_clock():
+    """Fires each medicine reminder at its time and again after a snooze; tells the family about a missed dose."""
+    while True:
+        now = hub_now()
+        for action, mid in hh.reminder_actions(hh.MEDICINES, hub.doses, now):
+            med = next(m for m in hh.MEDICINES if m["id"] == mid)
+            if action == "remind":
+                hub.doses[mid].update({"status": "due", "reminded_at": now.isoformat(timespec="seconds")})
                 await hub.emit("reminder", med, audience="tv")
+            else:
+                hub.doses[mid]["missed_sent"] = True
+                await hub.emit("missed", {"id": mid, "name": med["name"], "time": med["time"]}, audience="family")
         await asyncio.sleep(20)
 
 

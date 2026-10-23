@@ -3,5 +3,5 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["node_modules", "android", "kit/test"]
+  "exclude": ["android"]
 }

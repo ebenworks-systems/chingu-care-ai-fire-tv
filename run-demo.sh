@@ -30,7 +30,11 @@ if [ ! -x hub/.venv/bin/python ]; then
   hub/.venv/bin/pip install -q -r hub/requirements.txt
 fi
 hub/get-voice.sh
-(cd hub && DEMO_START="${DEMO_START:-}" nohup .venv/bin/uvicorn server:app --host 0.0.0.0 --port "$HUB_PORT" > ../hub.log 2>&1 &)
+# The hub has no sign-in in this demo: it listens on this computer only, unless a Fire TV on the
+# home network needs it (HUB_URL set to this computer's address).
+HUB_HOST=127.0.0.1
+case "$HUB_URL" in http://localhost*|http://127.0.0.1*) ;; *) HUB_HOST=0.0.0.0 ;; esac
+(cd hub && DEMO_START="${DEMO_START:-}" nohup .venv/bin/uvicorn server:app --host "$HUB_HOST" --port "$HUB_PORT" > ../hub.log 2>&1 &)
 for _ in $(seq 1 30); do curl -fs "http://localhost:$HUB_PORT/healthz" >/dev/null && break; sleep 1; done
 curl -fs "http://localhost:$HUB_PORT/healthz" && echo
 

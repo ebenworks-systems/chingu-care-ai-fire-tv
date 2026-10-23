@@ -62,3 +62,4 @@ CLAUDE.local.md
 # Devpost working copy (pasted into the form, kept out of the repository)
 submission/
 __pycache__/
+hub/.data/

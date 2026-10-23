@@ -5,3 +5,4 @@ python-multipart==0.0.*
 piper-tts==1.3.*
 faster-whisper==1.2.*
 av<16  # faster-whisper 1.2 passes metadata_errors, which PyAV 16 removed
+pytest==8.*  # for npm test

@@ -4,7 +4,7 @@ import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { CareFocusable, CareText, useFocusReturn, useInterruptibleMedia } from "../../kit/src";
+import { CareFocusable, CareText, useFocusReturn, useInterruptibleMedia } from "@ebenworks/tv-care-kit";
 import { api, HubState, Message } from "../api";
 import { nowMs, PillButton, Tag } from "../components";
 import { Strings } from "../i18n";
@@ -12,12 +12,12 @@ import { colors, fonts, radius } from "../theme";
 
 type Props = { s: Strings; hub: HubState; openId: string | null; onOpen: (id: string | null) => void; onHome: () => void };
 
-function ago(iso: string) {
+function ago(iso: string, s: Strings) {
   const mins = Math.max(0, Math.round((nowMs() - new Date(iso).getTime()) / 60000));
-  if (mins < 2) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-  if (mins < 60 * 24) return `${Math.round(mins / 60)} h ago`;
-  return `${Math.round(mins / 1440)} d ago`;
+  if (mins < 2) return s.justNow;
+  if (mins < 60) return s.minAgo(mins);
+  if (mins < 60 * 24) return s.hAgo(Math.round(mins / 60));
+  return s.dAgo(Math.round(mins / 1440));
 }
 
 export function Family({ s, hub, openId, onOpen, onHome }: Props) {
@@ -41,9 +41,9 @@ export function Family({ s, hub, openId, onOpen, onHome }: Props) {
                   {m.from_name}
                 </CareText>
                 <CareText role="caption" style={{ color: colors.muted, fontFamily: fonts.sans, flex: 1 }} numberOfLines={1}>
-                  {ago(m.at)}
+                  {ago(m.at, s)}
                 </CareText>
-                {m.video ? <Tag>{`▶ ${s.videoPostcard}`}</Tag> : !m.seen ? <Tag tone="ok">New</Tag> : null}
+                {m.video ? <Tag>{`▶ ${s.videoPostcard}`}</Tag> : !m.seen ? <Tag tone="ok">{s.newTag}</Tag> : null}
               </View>
               <CareText role="caption" style={{ color: colors.ink, fontFamily: fonts.sans }} numberOfLines={3}>
                 {m.text}
@@ -64,7 +64,7 @@ function Postcard({ s, msg, onBack }: { s: Strings; msg: Message; onBack: () => 
     <View style={{ flex: 1, flexDirection: "row", gap: 28 }}>
       <View style={styles.stage}>
         {msg.video ? (
-          <VideoPostcard uri={api.media(msg.video)} />
+          <VideoPostcard s={s} uri={api.media(msg.video)} />
         ) : msg.photo ? (
           <Image source={{ uri: api.media(msg.photo) }} style={StyleSheet.absoluteFill} contentFit="cover" />
         ) : null}
@@ -82,7 +82,7 @@ function Postcard({ s, msg, onBack }: { s: Strings; msg: Message; onBack: () => 
   );
 }
 
-function VideoPostcard({ uri }: { uri: string }) {
+function VideoPostcard({ s, uri }: { s: Strings; uri: string }) {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
     p.play();
@@ -98,10 +98,10 @@ function VideoPostcard({ uri }: { uri: string }) {
         hasTVPreferredFocus={focusHere}
         onPress={() => (player.playing ? player.pause() : player.play())}
         style={styles.playBtn}
-        label={isPlaying ? "Pause" : "Play"}
+        label={isPlaying ? s.pause : s.play}
       >
         <CareText role="label" style={{ color: colors.navy, fontFamily: fonts.sansBold }}>
-          {isPlaying ? "❚❚  Pause" : "▶  Play"}
+          {isPlaying ? `❚❚  ${s.pause}` : `▶  ${s.play}`}
         </CareText>
       </CareFocusable>
     </View>

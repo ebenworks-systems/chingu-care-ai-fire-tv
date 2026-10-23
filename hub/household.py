@@ -27,9 +27,9 @@ FAMILY = [
 ]
 
 MEDICINES = [
-    {"id": "bp", "name": "Blood pressure tablet", "name_ko": "혈압약", "time": "09:00", "note": "With breakfast"},
-    {"id": "vitd", "name": "Vitamin D", "name_ko": "비타민 D", "time": "13:00", "note": "After lunch"},
-    {"id": "night", "name": "Evening tablet", "name_ko": "저녁 약", "time": "20:00", "note": "With water"},
+    {"id": "bp", "name": "Blood pressure tablet", "name_ko": "혈압약", "time": "09:00", "note": "With breakfast", "note_ko": "아침 식사와 함께"},
+    {"id": "vitd", "name": "Vitamin D", "name_ko": "비타민 D", "time": "13:00", "note": "After lunch", "note_ko": "점심 식사 후"},
+    {"id": "night", "name": "Evening tablet", "name_ko": "저녁 약", "time": "20:00", "note": "With water", "note_ko": "물과 함께"},
 ]
 
 # Family postcards already on the TV when the demo starts. Photos are generated
@@ -108,9 +108,12 @@ def learn_routine(log: list[dict], now: datetime | None = None) -> dict:
     """
     now = now or datetime.now()
     weekend = now.weekday() >= 5
+    # Learn from the last 14 days before today; today is what gets compared with them.
+    past = [d for d in log if d["date"] < now.date().isoformat() and d.get("tv_on")][-14:] or log
+    log = past
     same = [d for d in log if d["weekend"] == weekend] or log
     on = [_minutes(d["tv_on"]) for d in same]
-    chk = [_minutes(d["checkin"]) - _minutes(d["tv_on"]) for d in same]
+    chk = [_minutes(d["checkin"]) - _minutes(d["tv_on"]) for d in same if d.get("checkin")] or [75]
     usual_on = median(on)
     return {
         "days_learned": len(log),
@@ -119,3 +122,40 @@ def learn_routine(log: list[dict], now: datetime | None = None) -> dict:
         "usual_checkin": _hhmm(usual_on + median(chk)),
         "quiet_after": _hhmm(max(on) + 90),
     }
+
+
+def quiet_tv_note(routine: dict, tv_on_today: str | None, now: datetime) -> dict | None:
+    """The gentle note for the family when the TV has stayed off past the learned hour.
+
+    Returns None while the TV has come on today or the hour has not passed yet.
+    """
+    if tv_on_today or now.strftime("%H:%M") < routine["quiet_after"]:
+        return None
+    return {"usual_tv_on": routine["usual_tv_on"], "quiet_after": routine["quiet_after"], "days_learned": routine["days_learned"]}
+
+
+SNOOZE_MINUTES = 10
+MISSED_AFTER_MINUTES = 30  # as in Chingu Care AI's phone apps: no answer in 30 minutes tells the family
+
+
+def reminder_actions(medicines: list[dict], doses: dict[str, dict], now: datetime) -> list[tuple[str, str]]:
+    """What the medicine clock does at `now`: ("remind", id) or ("missed", id).
+
+    A dose is reminded at its set time and again when a snooze ends; if a reminder
+    goes unanswered for MISSED_AFTER_MINUTES the family is told once.
+    """
+    hhmm = now.strftime("%H:%M")
+    actions = []
+    for med in medicines:
+        dose = doses[med["id"]]
+        if dose["status"] == "taken":
+            continue
+        if dose["status"] == "due" and not dose.get("reminded_at") and med["time"] <= hhmm:
+            actions.append(("remind", med["id"]))
+        elif dose["status"] == "snoozed" and dose["at"] and dose["at"] <= hhmm:
+            actions.append(("remind", med["id"]))
+        elif dose.get("reminded_at") and not dose.get("missed_sent"):
+            asked = datetime.fromisoformat(dose["reminded_at"])
+            if (now - asked).total_seconds() >= MISSED_AFTER_MINUTES * 60:
+                actions.append(("missed", med["id"]))
+    return actions

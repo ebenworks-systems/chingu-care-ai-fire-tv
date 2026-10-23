@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, ScrollViewInstance, StyleSheet, TVFocusGuideView, View } from "react-native";
 
-import { CareFocusable, CareText, useTypeScale } from "../../kit/src";
+import { CareFocusable, CareText, useTypeScale } from "@ebenworks/tv-care-kit";
 import { api, Emergency, HubState, Note } from "../api";
 import { PillButton, RippleMark, Tag } from "../components";
 import { Strings } from "../i18n";
@@ -24,6 +24,7 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
   const [busy, setBusy] = useState(true);
   const [note, setNote] = useState<Note | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [micOff, setMicOff] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
   const { speak, stop } = useSpeech();
   const listen = useListen();
@@ -41,7 +42,7 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
         setBusy(false);
         speak(`${r.notice} ${r.reply}`);
       })
-      .catch(() => setError("The care hub did not answer. Check that it is running."));
+      .catch(() => setError(s.hubError));
     return () => {
       live = false;
       stop();
@@ -65,7 +66,7 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
       speak(r.reply);
       if (r.emergency) onEmergency(r.emergency);
     } catch {
-      setError("The care hub did not answer. Check that it is running.");
+      setError(s.hubError);
     } finally {
       setBusy(false);
     }
@@ -81,11 +82,13 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
       } catch (e) {
         console.warn("voice answer failed", e instanceof Error ? e.message : e);
         setBusy(false);
-        setError("I could not hear that. Please choose an answer instead.");
+        setError(s.notHeard);
       }
     } else {
       stop();
-      await listen.start();
+      // No microphone the app may use (refused, or none on this TV): answers come from the remote.
+      const ok = await listen.start().catch(() => false);
+      if (!ok) setMicOff(true);
     }
   }
 
@@ -112,8 +115,8 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
           </CareText>
           <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
             <Tag tone="ok">{s.noteSentTo(note.sent_to.join(", "))}</Tag>
-            {note.mood_signal ? <Tag>{`Mood: ${note.mood_signal} (AI estimate)`}</Tag> : null}
-            {note.flags.includes("emergency") ? <Tag tone="help">Emergency flagged</Tag> : null}
+            {note.mood_signal ? <Tag>{s.mood(note.mood_signal)}</Tag> : null}
+            {note.flags.includes("emergency") ? <Tag tone="help">{s.emergencyFlagged}</Tag> : null}
           </View>
           <CareText role="caption" style={{ color: colors.muted, fontFamily: fonts.sans }}>
             {s.noteAi}
@@ -165,6 +168,11 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
       </View>
 
       <TVFocusGuideView autoFocus style={styles.controls}>
+        {micOff ? (
+          <CareText role="label" style={{ color: colors.navy, fontFamily: fonts.sansSemi }}>
+            {s.noMic}
+          </CareText>
+        ) : (
         <CareFocusable
           hasTVPreferredFocus
           onPress={() => (busy && !listen.listening ? undefined : onSpeak())}
@@ -178,11 +186,12 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
             {listen.listening ? s.listening : s.speakHint}
           </CareText>
         </CareFocusable>
+        )}
         <CareText role="caption" style={{ color: colors.muted, fontFamily: fonts.sansSemi, marginTop: 6 }}>
           {s.orChoose}
         </CareText>
-        {suggestions.map((sug) => (
-          <CareFocusable key={sug} onPress={() => (busy ? undefined : send(sug))} style={styles.chip} label={sug}>
+        {suggestions.map((sug, i) => (
+          <CareFocusable key={sug} hasTVPreferredFocus={micOff && i === 0} onPress={() => (busy ? undefined : send(sug))} style={styles.chip} label={sug}>
             <CareText role="label" style={{ color: colors.navy, fontFamily: fonts.sansSemi }}>
               {sug}
             </CareText>

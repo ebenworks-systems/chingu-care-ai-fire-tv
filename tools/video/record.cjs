@@ -169,10 +169,11 @@ const post = (p, body) => fetch(HUB + p, { method: "POST", headers: { "Content-T
   await key("back"); // list -> home
   await sleep(1.2);
   await key("left"); // Today's check-in
+  await narrate("n11b", 0.2);
   n = spokenCount();
   await key("ok");
   mark("scene", { name: "checkin-2" });
-  await waitSpoken(n);
+  await waitSpoken(n); // the greeting follows up on the morning's note
   await narrate("n12", 0.2);
   await key("ok");
   await sleep(0.8);
@@ -183,6 +184,16 @@ const post = (p, body) => fetch(HUB + p, { method: "POST", headers: { "Content-T
   await waitSpoken(n, 40);
   mark("scene", { name: "split-emergency" });
   await narrate("n13", 0.8);
+
+  // 8. Korean, switched live with the remote.
+  await key("ok"); // Close the emergency notice
+  await sleep(0.8);
+  await key("back"); // check-in -> home
+  await sleep(1.5);
+  await key("right", "up", "right"); // From your family, Text size, language
+  await key("ok");
+  mark("scene", { name: "korean" });
+  await narrate("n15", 2.4);
 
   await sleep(1.0);
   mark("tv-record-stop");

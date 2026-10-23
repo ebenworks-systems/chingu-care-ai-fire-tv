@@ -3,7 +3,7 @@
 // EXPO_PUBLIC_HUB_URL to the hub's address on the home network.
 export const HUB = (process.env.EXPO_PUBLIC_HUB_URL || "http://localhost:8797").replace(/\/$/, "");
 
-export type Medicine = { id: string; name: string; name_ko: string; time: string; note: string; status: "due" | "taken" | "snoozed"; at: string | null };
+export type Medicine = { id: string; name: string; name_ko: string; time: string; note: string; note_ko?: string; status: "due" | "taken" | "snoozed"; at: string | null };
 export type Message = { id: string; from: string; from_name: string; text: string; photo: string | null; video?: string | null; at: string; seen: boolean };
 export type Note = { id: string; body: string; mood_signal: string | null; flags: string[]; ai_label: string; at: string; minutes: number; sent_to: string[] };
 export type HubState = {

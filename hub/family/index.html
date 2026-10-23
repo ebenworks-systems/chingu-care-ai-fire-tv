@@ -100,6 +100,8 @@ function render(e) {
     taken: () => ["taken", `${esc(d.name)} taken at ${clock(d.at)}`, ""],
     seen: () => ["seen", `Mom opened your postcard`, ""],
     tv_on: () => ["seen", `The TV came on at ${clock(d.at)}`, ""],
+    missed: () => ["help", `${esc(d.name)} not confirmed`, `<p>The ${clock(d.time)} reminder had no answer for 30 minutes. Maybe give her a call.</p>`],
+    quiet: () => ["help", "The TV has not come on yet today", `<p>It is usually on by ${clock(d.usual_tv_on)} (learned from the last ${esc(d.days_learned)} days). Maybe give her a call.</p>`],
     message: () => ["seen", `You sent a postcard`, `<p>${esc(d.text)}</p>`],
   };
   if (!map[e.kind]) return;

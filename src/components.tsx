@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 
-import { CareFocusable, CareText } from "../kit/src";
+import { CareFocusable, CareText } from "@ebenworks/tv-care-kit";
 import { colors, fonts, radius } from "./theme";
 
 /** Chingu Care AI's ripple mark, the product's only logo. */

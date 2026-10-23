@@ -6,6 +6,7 @@
 import os
 from datetime import date, datetime
 
+os.environ["HUB_MEMORY"] = "off"  # tests never write the household's file
 os.environ.pop("LLM_BASE_URL", None)
 os.environ.pop("LLM_API_KEY", None)
 os.environ.pop("NJERE_API_KEY", None)
@@ -75,3 +76,55 @@ def test_inputs_are_checked():
     assert client.post("/api/checkin/turn", json={"session": "nope", "text": "hi"}).status_code == 404
     photo = client.post("/api/family/message", json={"sender": "jiwoo", "text": "x", "photo": "https://elsewhere.example/x.jpg"}).json()
     assert photo["photo"] is None
+
+
+def test_a_quiet_tv_becomes_a_gentle_note_only_after_the_learned_hour():
+    log = hh.routine_log(days=14, today=date(2026, 10, 23))
+    friday_noon = datetime(2026, 10, 23, 12, 0)
+    routine = hh.learn_routine(log, now=friday_noon)
+    early = datetime(2026, 10, 23, 8, 0)
+    assert hh.quiet_tv_note(hh.learn_routine(log, now=early), None, early) is None
+    note = hh.quiet_tv_note(routine, None, friday_noon)
+    assert note and note["usual_tv_on"] == routine["usual_tv_on"]
+    assert hh.quiet_tv_note(routine, "07:45", friday_noon) is None
+
+
+def test_the_medicine_clock_reminds_re_asks_after_a_snooze_and_tells_the_family_once():
+    meds = [{"id": "bp", "time": "09:00"}]
+    due = {"bp": {"status": "due", "at": None}}
+    assert hh.reminder_actions(meds, due, datetime(2026, 10, 23, 8, 59)) == []
+    assert hh.reminder_actions(meds, due, datetime(2026, 10, 23, 9, 0)) == [("remind", "bp")]
+    snoozed = {"bp": {"status": "snoozed", "at": "09:10", "reminded_at": "2026-10-23T09:00:00"}}
+    assert hh.reminder_actions(meds, snoozed, datetime(2026, 10, 23, 9, 5)) == []
+    assert hh.reminder_actions(meds, snoozed, datetime(2026, 10, 23, 9, 10)) == [("remind", "bp")]
+    waiting = {"bp": {"status": "due", "at": None, "reminded_at": "2026-10-23T09:10:00"}}
+    assert hh.reminder_actions(meds, waiting, datetime(2026, 10, 23, 9, 39)) == []
+    assert hh.reminder_actions(meds, waiting, datetime(2026, 10, 23, 9, 40)) == [("missed", "bp")]
+    waiting["bp"]["missed_sent"] = True
+    assert hh.reminder_actions(meds, waiting, datetime(2026, 10, 23, 9, 41)) == []
+    taken = {"bp": {"status": "taken", "at": "09:02"}}
+    assert hh.reminder_actions(meds, taken, datetime(2026, 10, 23, 10, 0)) == []
+
+
+def test_the_next_check_in_remembers_earlier_notes():
+    from companion import Companion, Session
+
+    c = Companion({"parent": hh.PARENT, "family": hh.FAMILY, "medicines": hh.MEDICINES})
+    memory = [{"at": "2026-10-23T08:59:00", "body": "Young-hee's knee hurts a little this morning."}]
+    persona = c._persona("en", memory)
+    assert "knee hurts" in persona and "follow up" in persona
+    assert "earlier check-ins" not in c._persona("en", [])
+    start = client.post("/api/checkin/start").json()
+    client.post("/api/checkin/end", json={"session": start["session"]})
+    from server import hub
+
+    second = client.post("/api/checkin/start").json()
+    assert hub.sessions[second["session"]].memory[0]["body"] == hub.notes[0]["body"]
+
+
+def test_today_is_written_into_the_routine_log():
+    from server import hub
+
+    client.post("/api/activity/tv-on")
+    today = [d for d in hub.log if d["date"] == datetime.now().date().isoformat()]
+    assert today and today[0]["tv_on"] == hub.today["tv_on"]

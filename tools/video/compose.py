@@ -121,12 +121,11 @@ chip_n = first("narration", id="n05")
 chip_ok = next(e for e in events if e["kind"] == "key" and e["key"] == "ok" and e["t"] > chip_n["t"])
 s = next_spoken(chip_ok["t"])
 shorten(chip_ok["t"] + 0.2, s["at"] + PLAYBACK_LATENCY - 0.1, 1.4)
-# The second check-in's greeting is the same as the first: keep a glimpse, drop its voice.
+# The second check-in's greeting follows up on the morning's note: keep it, shorten the wait.
 c2 = first("scene", name="checkin-2")
 g2 = next_spoken(c2["t"])
-n12 = first("narration", id="n12")
-cuts.append((c2["t"] + 1.6, min(g2["at"] + PLAYBACK_LATENCY + g2["secs"] + 0.2, n12["t"] - 0.15)))
-muted = {g2["file"] + str(g2["at"])}
+shorten(c2["t"] + 0.6, g2["at"] + PLAYBACK_LATENCY - 0.1, 1.4)
+muted = set()
 # From the last answer to the note: focus walks down to Finish, then the note appears.
 s_chip = next_spoken(chip_ok["t"])
 shorten(s_chip["at"] + PLAYBACK_LATENCY + s_chip["secs"] + 0.3, first("scene", name="note")["t"] - 0.2, 3.2)
@@ -135,7 +134,22 @@ n07 = first("narration", id="n07")
 shorten(n07["t"] + nlen["n07"] + 0.4, first("scene", name="postcard")["t"] + 0.6, 4.2)
 # The walk from Ji-woo's postcard back to the check-in: keep a glimpse of focus moving.
 n11 = first("narration", id="n11")
-shorten(n11["t"] + nlen["n11"] + 0.3, c2["t"] - 0.8, 2.4)
+shorten(n11["t"] + nlen["n11"] + 0.3, first("narration", id="n11b")["t"] - 0.2, 2.4)
+# Any stretch with no voice longer than 2.2 s is shortened to 1.4 s: the film moves on.
+voices = []
+for e in events:
+    if e["kind"] == "narration":
+        voices.append((e["t"], e["t"] + nlen[e["id"]]))
+    elif e["kind"] == "parent-voice":
+        voices.append((e["t"] + e["lead"], e["t"] + e["lead"] + 3.5))
+for s in spoken:
+    voices.append((s["at"] + PLAYBACK_LATENCY, s["at"] + PLAYBACK_LATENCY + s["secs"]))
+voices.sort()
+edge = start + 1.0
+for a, b in voices:
+    if a - edge > 2.2:
+        shorten(edge, a, 1.4)
+    edge = max(edge, b)
 cuts.sort()
 keep = []
 cursor = start
@@ -172,14 +186,15 @@ emergency_line = next(s for s in spoken if "911" in s["text"])
 split = [
     (scene_t("split-note"), scene_t("postcard") - 1.0),
     (scene_t("split-taken"), c2["t"] - 3.0),
-    (emergency_line["at"] - 0.3, stop),
+    (emergency_line["at"] - 0.3, scene_t("korean", stop) - 2.5),
 ]
 
 # --- 4. Render the pieces ----------------------------------------------------------------
 CANVAS = "#FAF5EE"
 FONTS = ROOT / "hub" / "media" / "fonts"
-TV_BOX = (40, 214, 1232, 693)  # x, y, w, h
-PH_BOX = (1312, 64, 560, 919)  # the top 640 css px of the 390 px phone page, enlarged to read
+TV_BOX = (40, 190, 1232, 693)  # x, y, w, h
+PH_BOX = (1312, 50, 560, 919)  # the top 640 css px of the 390 px phone page, enlarged to read
+FULL_BOX = (106, 0, 1708, 960)  # the TV alone, leaving a band below for captions
 
 
 def split_layers():
@@ -188,9 +203,9 @@ def split_layers():
     d = ImageDraw.Draw(bg)
     serif = ImageFont.truetype(str(FONTS / "Fraunces_500Medium.ttf"), 40)
     semi = ImageFont.truetype(str(FONTS / "Pretendard-SemiBold.otf"), 30)
-    d.text((44, 136), "Young-hee's TV", font=serif, fill="#1C3D52")
-    d.text((370, 146), "Los Angeles", font=semi, fill="#5E6B72")
-    d.text((PH_BOX[0] + 4, 16), "Ji-woo's phone · Seoul", font=semi, fill="#1C3D52")
+    d.text((44, 112), "Young-hee's TV", font=serif, fill="#1C3D52")
+    d.text((370, 122), "Los Angeles", font=semi, fill="#5E6B72")
+    d.text((PH_BOX[0] + 4, 8), "Ji-woo's phone · Seoul", font=semi, fill="#1C3D52")
     for x, y, w, h in (TV_BOX, PH_BOX):
         d.rounded_rectangle([x - 3, y - 3, x + w + 3, y + h + 3], 26, fill="#E7DCCD")
     fg = Image.new("RGBA", (1920, 1080), (0, 0, 0, 0))
@@ -227,20 +242,22 @@ for a, b in zip(bounds, bounds[1:]):
              "-ss", f"{pt:.3f}", "-t", f"{b - a:.3f}", "-i", phone_cfr, "-loop", "1", "-t", f"{b - a:.3f}", "-i", TMP / "split-fg.png",
              "-filter_complex", graph, "-map", "[v]", "-r", FPS, "-t", f"{b - a:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
     else:
-        run(["-ss", f"{vt:.3f}", "-t", f"{b - a:.3f}", "-i", tv_cfr, "-vf", "scale=1920:1080,format=yuv420p", "-r", FPS,
-             "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
+        x, y, w, h = FULL_BOX
+        run(["-ss", f"{vt:.3f}", "-t", f"{b - a:.3f}", "-i", tv_cfr, "-f", "lavfi", "-t", f"{b - a:.3f}", "-i", f"color=c={CANVAS}:s=1920x1080:r={FPS}",
+             "-filter_complex", f"[0:v]scale={w}:{h}[tv];[1:v][tv]overlay={x}:{y},format=yuv420p[v]", "-map", "[v]", "-r", FPS,
+             "-t", f"{b - a:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
     pieces.append(out)
 body_len = film_time(stop)
 
 # The closing stills, each held for its narration.
-stills = [("s0-korean", "n15"), ("s1-architecture", "n16"), ("s2-kit", "n17"), ("s3-before-after", "n18"), ("s4-end", "n19")]
+stills = [("s1-architecture", "n16"), ("s2-kit", "n17"), ("s3-before-after", "n18"), ("s4-end", "n19")]
 still_start = {}
 t_cursor = body_len
 for name, nid in stills:
     dur = nlen[nid] + {"s4-end": 1.6, "s0-korean": 1.4}.get(name, 1.0)
     out = TMP / f"still-{name}.mp4"
     run(["-loop", "1", "-t", f"{dur:.3f}", "-i", WORK / "slides" / f"{name}.png",
-         "-vf", f"scale=1920:1080,format=yuv420p,fade=t=in:st=0:d=0.25", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
+         "-vf", f"scale=1920:1080,format=yuv420p,fade=t=in:st=0:d=0.25:color={CANVAS}", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "medium", out])
     pieces.append(out)
     still_start[nid] = t_cursor + 0.35
     t_cursor += dur
@@ -301,12 +318,27 @@ WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,Pretendard,40,&H00523D1C,&H00523D1C,&H00FFFFFF,&H20FFFFFF,1,0,0,0,100,100,0,0,3,16,0,2,240,240,36,1
+Style: Cap,Pretendard,40,&H00523D1C,&H00523D1C,&H00FFFFFF,&H20FFFFFF,1,0,0,0,100,100,0,0,3,16,0,2,240,240,30,1
+Style: Key,Pretendard,30,&H00FFFFFF,&H00FFFFFF,&H003A61C4,&H003A61C4,1,0,0,0,100,100,0,0,3,10,0,1,40,40,40,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-(TMP / "captions.ass").write_text(head + "".join(f"Dialogue: 0,{stamp(a)},{stamp(b)},Cap,,0,0,0,,{t}\n" for a, b, t in caps), encoding="utf-8")
+KEY_NAMES = {"ok": "OK", "up": "Up", "down": "Down", "left": "Left", "right": "Right", "back": "Back"}
+keys = []
+for e in events:
+    if e["kind"] == "key" and in_keep(e["t"] - 0.7):
+        at = film_time(e["t"] - 0.7)
+        keys.append((at, at + 0.8, f"Remote · {KEY_NAMES.get(e['key'], e['key'])}"))
+for i in range(len(keys) - 1):
+    a, b, text = keys[i]
+    keys[i] = (a, min(b, keys[i + 1][0] - 0.02), text)
+(TMP / "captions.ass").write_text(
+    head
+    + "".join(f"Dialogue: 0,{stamp(a)},{stamp(b)},Cap,,0,0,0,,{t}\n" for a, b, t in caps)
+    + "".join(f"Dialogue: 1,{stamp(a)},{stamp(b)},Key,,0,0,0,,{t}\n" for a, b, t in keys),
+    encoding="utf-8",
+)
 with open(OUT.with_suffix(".srt"), "w", encoding="utf-8") as srt:
     for i, (a, b, t) in enumerate(caps, 1):
         srt.write(f"{i}\n{srt_stamp(a)} --> {srt_stamp(b)}\n{t}\n\n")

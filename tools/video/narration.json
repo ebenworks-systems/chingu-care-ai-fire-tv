@@ -11,8 +11,8 @@
  },
  {
   "id": "n03",
-  "say": "One press on the remote starts today's check-in.",
-  "caption": "One press on the remote starts today's check-in."
+  "say": "It knows her usual time. One press on the remote starts today's check-in.",
+  "caption": "It knows her usual time. One press on the remote starts today's check-in."
  },
  {
   "id": "n04",
@@ -53,6 +53,11 @@
   "id": "n11",
   "say": "Jee-woo can write straight back to the TV.",
   "caption": "Ji-woo can write straight back to the TV."
+ },
+ {
+  "id": "n11b",
+  "say": "Her next check-in remembers this morning.",
+  "caption": "Her next check-in remembers this morning."
  },
  {
   "id": "n12",

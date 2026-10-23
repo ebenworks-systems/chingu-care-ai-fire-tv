@@ -8,6 +8,7 @@ const en = {
   afternoon: "Good afternoon",
   evening: "Good evening",
   talkTitle: "Today's check-in",
+  usualNow: "Your usual time",
   talkBodyUsual: (t: string) => `Talk with your AI companion. Usually around ${t}.`,
   talkBodyDone: (t: string) => `Done at ${t}. Your family has the note.`,
   familyTitle: "From your family",
@@ -56,6 +57,18 @@ const en = {
   watching: "Now playing",
   videoPostcard: "Video",
   seeAll: "See all postcards",
+  justNow: "just now",
+  minAgo: (n: number) => `${n} min ago`,
+  hAgo: (n: number) => `${n} h ago`,
+  dAgo: (n: number) => `${n} d ago`,
+  newTag: "New",
+  hubError: "The care hub did not answer. Check that it is running.",
+  notHeard: "I could not hear that. Please choose an answer instead.",
+  noMic: "No microphone here. Choose an answer.",
+  mood: (m: string) => `Mood: ${m} (AI estimate)`,
+  emergencyFlagged: "Emergency flagged",
+  waitingHub: "Waiting for the care hub…",
+  hubOffline: "Hub offline",
 };
 
 const ko: typeof en = {
@@ -66,6 +79,7 @@ const ko: typeof en = {
   afternoon: "좋은 오후예요",
   evening: "좋은 저녁이에요",
   talkTitle: "오늘의 안부",
+  usualNow: "늘 이야기하는 시간",
   talkBodyUsual: (t) => `AI 친구와 이야기해요. 보통 ${t}쯤이에요.`,
   talkBodyDone: (t) => `${t}에 마쳤어요. 가족에게 메모가 갔어요.`,
   familyTitle: "가족 소식",
@@ -114,6 +128,18 @@ const ko: typeof en = {
   watching: "재생 중",
   videoPostcard: "영상",
   seeAll: "엽서 모두 보기",
+  justNow: "방금",
+  minAgo: (n) => `${n}분 전`,
+  hAgo: (n) => `${n}시간 전`,
+  dAgo: (n) => `${n}일 전`,
+  newTag: "새 엽서",
+  hubError: "케어 허브가 응답하지 않아요. 실행 중인지 확인해 주세요.",
+  notHeard: "잘 듣지 못했어요. 답을 골라 주세요.",
+  noMic: "마이크가 없어요. 답을 골라 주세요.",
+  mood: (m) => `기분: ${m} (AI 추정)`,
+  emergencyFlagged: "응급 상황 표시됨",
+  waitingHub: "케어 허브를 기다리는 중…",
+  hubOffline: "허브 연결 끊김",
 };
 
 export const strings = { en, ko };

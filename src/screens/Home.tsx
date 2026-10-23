@@ -2,7 +2,7 @@ import React from "react";
 import { Image } from "expo-image";
 import { StyleSheet, TVFocusGuideView, View } from "react-native";
 
-import { CareFocusable, CareText, useFocusReturn } from "../../kit/src";
+import { CareFocusable, CareText, useFocusReturn } from "@ebenworks/tv-care-kit";
 import { api, HubState } from "../api";
 import { clockText, RippleMark, Tag, useClock } from "../components";
 import { Strings } from "../i18n";
@@ -31,6 +31,10 @@ export function Home({ s, lang, hub, onTalk, onFamily, onOk, onHelp, onHelpHold,
   const latest = hub.messages[0];
   const unseen = hub.messages.filter((m) => !m.seen).length;
   const checkedIn = hub.routine.today.checkin;
+  // The routine the hub learned from the TV: near the usual time, the check-in card says so.
+  const [uh, um] = hub.routine.usual_checkin.split(":").map(Number);
+  const fromUsual = now.getHours() * 60 + now.getMinutes() - (uh * 60 + um);
+  const usualNow = !checkedIn && fromUsual >= -45 && fromUsual <= 90;
   const date = now.toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (
@@ -51,6 +55,7 @@ export function Home({ s, lang, hub, onTalk, onFamily, onOk, onHelp, onHelpHold,
                 <RippleMark size={50} />
               </View>
               <View style={{ flex: 1 }}>
+                {usualNow ? <Tag tone="ok">{s.usualNow}</Tag> : null}
                 <CareText role="heading" style={styles.talkTitle}>
                   {s.talkTitle}
                 </CareText>

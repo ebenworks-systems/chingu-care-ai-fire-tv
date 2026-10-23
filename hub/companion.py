@@ -89,6 +89,8 @@ class Session:
     turns: list[dict] = field(default_factory=list)
     scripted_step: int = 0
     emergency: dict | None = None
+    memory: list[dict] = field(default_factory=list)
+    now: str = ""  # the household's local time, so "earlier today" and "yesterday" come out right
 
 
 class Companion:
@@ -122,8 +124,13 @@ class Companion:
         except (httpx.HTTPError, KeyError, ValueError, IndexError):
             return None
 
-    def _persona(self, lang: str) -> str:
+    def _persona(self, lang: str, memory: list[dict] | None = None, now: str = "") -> str:
         h = self.household
+        recall = f"\nIt is now {now} where the parent lives." if now else ""
+        if memory:
+            recall += "\nNotes your family received after earlier check-ins (newest first):\n" + "\n".join(
+                f'- {m["at"][:16].replace("T", " ")}: {m["body"]}' for m in memory
+            ) + "\nIf one of them mentions something to follow up (how they felt, a pain, a plan), ask about it in your first question, briefly and kindly."
         return PERSONA.format(
             language="Korean" if lang == "ko" else "English",
             name=h["parent"]["name"],
@@ -131,7 +138,7 @@ class Companion:
             city=h["parent"]["city"],
             family=", ".join(f'{m["name"]} ({m["relation"]}, in {m["city"]})' for m in h["family"]),
             medicines=", ".join(f'{m["name"]} at {m["time"]}' for m in h["medicines"]),
-        )
+        ) + recall
 
     @staticmethod
     def phrase_score(text: str) -> tuple[float, str]:
@@ -162,8 +169,9 @@ class Companion:
         if self.live:
             opening = await self._chat(
                 [
-                    {"role": "system", "content": self._persona(lang)},
-                    {"role": "user", "content": "(The parent just pressed Talk on the remote to start today's check-in. Greet them by first name and ask your first question.)"},
+                    {"role": "system", "content": self._persona(lang, session.memory, session.now)},
+                    {"role": "user", "content": "(The parent just pressed Talk on the remote to start a check-in. Greet them by first name and ask your first question."
+                     + (" Your first question must follow up on the most recent note above, naming what it mentioned.)" if session.memory else ")")},
                 ],
                 self.model,
             )
@@ -183,7 +191,7 @@ class Companion:
         reply_task = None
         if self.live:
             reply_task = asyncio.create_task(
-                self._chat([{"role": "system", "content": self._persona(lang)}, *session.turns], self.model)
+                self._chat([{"role": "system", "content": self._persona(lang, session.memory, session.now)}, *session.turns], self.model)
             )
         check = await check_task
         if check["level"] == "emergency":

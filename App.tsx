@@ -5,7 +5,7 @@ import { Fraunces_400Regular, Fraunces_500Medium } from "@expo-google-fonts/frau
 import { StatusBar } from "expo-status-bar";
 import { BackHandler, StyleSheet, TVFocusGuideView, View } from "react-native";
 
-import { CareFocusable, CareText, Interrupt, InterruptOverlay, InterruptProvider, nextTextSize, TypeScaleProvider, useInterrupts, useTypeScale } from "./kit/src";
+import { CareFocusable, CareText, Interrupt, InterruptOverlay, InterruptProvider, nextTextSize, TypeScaleProvider, useInterrupts, useTypeScale } from "@ebenworks/tv-care-kit";
 import { api, Emergency, HubEvent, HubState, Medicine } from "./src/api";
 import { BreathingMark, PillButton, RippleMark, syncClock, Tag } from "./src/components";
 import { Lang, strings } from "./src/i18n";
@@ -124,7 +124,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
         raise({
           id: `med-${m.id}`,
           title: st.remindTitle(name),
-          body: `${m.note}. ${st.remindBody}`,
+          body: `${langRef.current === "ko" && m.note_ko ? m.note_ko : m.note}. ${st.remindBody}`,
           actions: [
             { id: "taken", label: st.taken },
             { id: "later", label: st.later },
@@ -184,7 +184,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
       <View style={[styles.root, { alignItems: "center", justifyContent: "center", gap: 16 }]}>
         <RippleMark size={96} />
         <CareText role="heading" style={{ color: colors.navy, fontFamily: fonts.sansSemi }}>
-          {offline ? "Waiting for the care hub…" : "Chingu Care AI"}
+          {offline ? s.waitingHub : s.product}
         </CareText>
       </View>
     );
@@ -200,7 +200,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
             {s.product}
           </CareText>
           <Tag>{s.demo}</Tag>
-          {offline ? <Tag tone="help">Hub offline</Tag> : null}
+          {offline ? <Tag tone="help">{s.hubOffline}</Tag> : null}
         </View>
         <TVFocusGuideView style={styles.headerActions}>
           <PillButton label={`${s.textSize}: ${size === "large" ? "A" : size === "larger" ? "A+" : "A++"}`} onPress={() => setSize(nextTextSize(size))} />

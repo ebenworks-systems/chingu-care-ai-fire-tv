@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@ebenworks/tv-care-kit": "https://gitlab.com/ebenworks-systems/tv-care-kit/-/archive/v0.1.1/tv-care-kit-v0.1.1.tar.gz",
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-tvos/config-tv": "^0.1.7",
@@ -29,7 +30,7 @@
     "prebuild": "EXPO_TV=1 expo prebuild --clean --platform android",
     "android": "EXPO_TV=1 expo run:android",
     "typecheck": "tsc --noEmit",
-    "test": "node --test kit/test/*.test.ts && cd hub && .venv/bin/python -m pytest -q",
+    "test": "cd hub && .venv/bin/python -m pytest -q",
     "demo": "./run-demo.sh"
   },
   "private": true,
