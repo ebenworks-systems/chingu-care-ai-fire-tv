@@ -1,6 +1,6 @@
 # Friction log: Chingu Care AI on Fire TV
 
-Every entry below happened to us while building this entry on 23 October 2026, on Ubuntu with Node.js 22.20, Expo SDK 58, react-native-tvos 0.88 and the Android emulator 36.6. Times and versions were read off the machine; error text is quoted as it appeared. The first five entries are about Amazon Devices Builder Tools for AI, which we tried against this app in a clean, separate folder.
+Every entry below happened to us while building this entry on 23 October 2026. Each lists the task, the steps, what we expected and what happened, a severity, the workaround, a suggestion and roughly how much time it cost. We worked on Ubuntu with Node.js 22.20, Expo SDK 58, react-native-tvos 0.88 and the Android emulator 36.6. Times and versions were read off the machine; error text is quoted as it appeared. The first five entries are about Amazon Devices Builder Tools for AI, which we tried against this app in a clean, separate folder.
 
 ## 1. Builder Tools lists every Vega document when asked for Fire OS
 
@@ -11,6 +11,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Major. An agent's context fills with documents for the wrong platform.
 - Workaround: read the `fos_*` documents by name.
 - Suggestion: apply the platform filter to `list_documents` and paginate it.
+- Time lost: a few minutes inside a 13-minute trial of the tools.
 
 ## 2. A document read fails without naming the bad field, and the README lists fewer tools than the server
 
@@ -21,6 +22,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Major. Our first call failed and the error did not say why.
 - Workaround: read the input schemas from `tools/list`.
 - Suggestion: generate the README from the server's schemas, and name the rejected field in the error.
+- Time lost: one failed call and the time to read the schemas, a few minutes.
 
 ## 3. "View content only" setup writes to the home folder and cleanup leaves it
 
@@ -31,6 +33,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Major for teams that keep agent configuration under review.
 - Workaround: run the installer with `HOME` pointed at a scratch folder.
 - Suggestion: make "view only" write nothing, add an option for the skills folder, say before cloning, and make `clean-context` match its help text.
+- Time lost: about 10 minutes to find what it had written and to repeat the run in a scratch home folder.
 
 ## 4. Non-interactive install skips the project-identifier consent question
 
@@ -41,6 +44,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Minor.
 - Workaround: delete the file.
 - Suggestion: treat `--force` as declining, or print a notice.
+- Time lost: a couple of minutes.
 
 ## 5. Platform detection does not recognise a React Native for TV app as Fire OS
 
@@ -51,6 +55,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Minor.
 - Workaround: an `.adbt-config.json` with `"platform": {"default": "fire_os"}`.
 - Suggestion: also look in `android/` and for the `react-native-tvos` alias in `package.json`.
+- Time lost: a couple of minutes.
 
 ## 6. No Fire OS system image to test against
 
@@ -61,6 +66,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Minor for the hackathon, Major for a real release: the Fire TV launcher, VoiceView and the remote's Alexa button cannot be tried without hardware.
 - Workaround: the Android TV image, with Fire OS differences checked in the documentation.
 - Suggestion: publish an x86_64 Fire OS emulator image in the SDK Manager, or a Fire OS profile for the Android TV image.
+- Time lost: about 5 minutes searching; the larger cost is what we could not test.
 
 ## 7. The Android TV emulator has no speech engine and, here, no microphone
 
@@ -71,6 +77,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Major for any voice-first TV app.
 - Workaround: the care hub makes speech with Piper and the TV plays it; for the film we started the emulator with `-grpc 8566` and streamed the parent's recorded answer into the virtual microphone with the emulator's `injectAudio` call. The app records and the hub transcribes exactly as it would on a device.
 - Suggestion: ship a speech engine in the TV images and document `injectAudio` next to the TV emulator instructions.
+- Time lost: about an hour in total, most of it building the audio-injection path for the film.
 
 ## 8. A prerelease React Native for TV version breaks npm peer ranges
 
@@ -81,6 +88,7 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Minor.
 - Workaround: `legacy-peer-deps=true` in `.npmrc`.
 - Suggestion: publish TV releases as `0.88.0-tv.0`-style versions that satisfy ranges, or note the `.npmrc` line in the TV setup guides.
+- Time lost: about 5 minutes.
 
 ## 9. Expo's fetch rejects React Native's file upload form
 
@@ -91,3 +99,4 @@ Every entry below happened to us while building this entry on 23 October 2026, o
 - Severity: Major until found: voice answers failed silently on the device.
 - Workaround: `XMLHttpRequest` for that one upload (`src/api.ts`).
 - Suggestion: support React Native's file parts in Expo's fetch, or name the alternative in the error.
+- Time lost: about 15 minutes, because the first failure showed only our own fallback message.

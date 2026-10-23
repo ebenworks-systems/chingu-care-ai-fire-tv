@@ -7,6 +7,7 @@ BEFORE_* are screenshots of the Chingu Care AI phone apps as they were before th
 hackathon; TV_HOME is a screenshot of the new TV app. Output: tools/video/work/slides/.
 """
 import io
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -70,7 +71,7 @@ def architecture():
 def kit():
     im, d = new()
     d.text((110, 150), "tv-care-kit", font=SERIF(104), fill=NAVY)
-    d.text((114, 290), "Open source · MIT · 16 tests", font=SEMI(40), fill=PERSIMMON)
+    d.text((114, 290), "Open source · MIT · 17 tests · v0.1.1", font=SEMI(40), fill=PERSIMMON)
     items = [
         ("Focus you can see from the sofa", "Size, ring and lift, not colour alone"),
         ("A 10-foot type scale", "Six roles, nothing under 18 dp, two steps up"),
@@ -86,8 +87,10 @@ def kit():
     panel = Image.new("RGBA", (800, 620), PAPER)
     pd = ImageDraw.Draw(panel)
     pd.text((36, 30), "$ npm test", font=SEMI(30), fill=NAVY)
-    out = subprocess.run(["node", "--test", *sorted(str(p) for p in (ROOT / "kit" / "test").glob("*.test.ts"))],
-                         capture_output=True, text=True, cwd=ROOT).stdout.splitlines()
+    # The kit's own tests, run from a clone of tv-care-kit (KIT_REPO, default: a sibling checkout).
+    kit = Path(os.environ.get("KIT_REPO", ROOT.parent.parent / "Open Source Projects" / "tv-care-kit"))
+    out = subprocess.run(["node", "--test", *sorted(str(p) for p in (kit / "test").glob("*.test.ts"))],
+                         capture_output=True, text=True, cwd=kit).stdout.splitlines()
     oks = [line for line in out if line.startswith("ok ")][:9]
     summary = [line for line in out if line.startswith(("# pass", "# fail"))]
     yy = 90
