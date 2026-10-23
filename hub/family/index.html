@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Chingu Care AI · Family</title>
+<link rel="icon" href="/media/ripple.svg" type="image/svg+xml">
+<style>
+  @font-face { font-family: "Fraunces"; src: url(/media/fonts/Fraunces_500Medium.ttf); font-weight: 500; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Regular.otf); font-weight: 400; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-SemiBold.otf); font-weight: 600; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Bold.otf); font-weight: 700; }
+  :root {
+    --canvas: #FAF5EE; --paper: #fff; --cream: #F5E6D3; --hair: #E7DCCD; --persimmon: #C4613A; --persimmon-soft: #F3D9CB;
+    --celadon: #2B7A6B; --celadon-soft: #D5EAE4; --navy: #1C3D52; --ink: #24333D; --muted: #5E6B72; --help: #C2413A; --help-soft: #F6DAD6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.5 Pretendard, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 460px; margin: 0 auto; padding: 18px 16px 40px; }
+  header { display: flex; align-items: center; gap: 10px; }
+  header img { width: 34px; height: 34px; }
+  header b { font: 500 20px Fraunces, Georgia, serif; color: var(--navy); }
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; background: var(--cream); color: var(--navy); }
+  .pill.ok { background: var(--celadon-soft); color: var(--celadon); }
+  .pill.help { background: var(--help-soft); color: var(--help); }
+  h1 { font: 500 30px/1.15 Fraunces, Georgia, serif; color: var(--navy); margin: 22px 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .card { background: var(--paper); border-radius: 20px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 0 var(--hair); }
+  .routine { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .routine div { background: var(--canvas); border-radius: 14px; padding: 10px; }
+  .routine small { display: block; color: var(--muted); font-size: 12px; }
+  .routine strong { font: 500 20px Fraunces, Georgia, serif; color: var(--navy); white-space: nowrap; }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--persimmon); margin: 22px 0 8px; }
+  .event { display: flex; gap: 12px; align-items: flex-start; }
+  .dot { flex: none; width: 12px; height: 12px; border-radius: 6px; margin-top: 7px; background: var(--hair); }
+  .event.note .dot { background: var(--persimmon); } .event.ok .dot, .event.taken .dot { background: var(--celadon); }
+  .event.help .dot, .event.emergency .dot { background: var(--help); }
+  .event.help, .event.emergency { background: var(--help-soft); }
+  .event p { margin: 2px 0 0; }
+  .event .t { color: var(--muted); font-size: 13px; }
+  .event .body { font: 500 18px/1.35 Fraunces, Georgia, serif; color: var(--navy); }
+  .ai { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  form textarea { width: 100%; border: 1px solid var(--hair); border-radius: 14px; padding: 12px; font: inherit; resize: none; min-height: 100px; background: var(--canvas); }
+  .photos { display: flex; gap: 8px; margin: 10px 0; overflow-x: auto; }
+  .photos label { flex: none; position: relative; }
+  .photos input { position: absolute; opacity: 0; }
+  .photos img { width: 76px; height: 54px; object-fit: cover; border-radius: 10px; border: 3px solid transparent; display: block; }
+  .photos input:checked + img { border-color: var(--persimmon); }
+  .photos input:focus-visible + img { outline: 2px solid var(--navy); }
+  button { width: 100%; border: 0; border-radius: 999px; padding: 13px; font: 700 16px Pretendard, sans-serif; color: #fff; background: var(--persimmon); cursor: pointer; }
+  button:disabled { opacity: .6; }
+  .empty { color: var(--muted); }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="/media/ripple.svg" alt=""><b>Chingu Care AI</b><span class="pill">Demo household</span></header>
+  <h1 id="title">Mom's TV</h1>
+  <p class="sub" id="sub">Los Angeles</p>
+
+  <section class="card" aria-label="Routine">
+    <div class="routine">
+      <div><small>TV on today</small><strong id="tvOn">—</strong></div>
+      <div><small>Usually by</small><strong id="usual">—</strong></div>
+      <div><small>Check-in</small><strong id="checkin">—</strong></div>
+    </div>
+    <p class="ai" id="learned"></p>
+  </section>
+
+  <div class="label">Send a postcard to the TV</div>
+  <form class="card" id="send">
+    <textarea id="text" maxlength="280" aria-label="Message" placeholder="Write to Mom…">Made your doenjang jjigae recipe tonight. Not as good as yours! Call me after your drama?</textarea>
+    <div class="photos" id="photos"></div>
+    <button id="go" type="submit">Send to Mom's TV</button>
+  </form>
+
+  <div class="label">Today</div>
+  <section id="feed"><p class="empty card">Nothing yet today.</p></section>
+  <footer>Notes are written by AI from each conversation. Full conversations are not shared. Chingu Care AI is not a medical device and does not replace 911.</footer>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const PHOTOS = ["/media/dinner.jpg", "/media/persimmons.jpg", "/media/river.jpg", "/media/drawing.jpg"];
+let after = 0, me = "jiwoo";
+const clock = (hhmm) => { if (!hhmm) return "—"; const [h, m] = hhmm.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`; };
+const fmt = (iso) => clock(iso.slice(11, 16));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+$("photos").innerHTML = PHOTOS.map((p, i) => `<label><input type="radio" name="photo" value="${p}" ${i === 0 ? "checked" : ""}><img src="${p}" alt="Photo ${i + 1}"></label>`).join("");
+
+function render(e) {
+  const d = e.data || {};
+  const map = {
+    note: () => ["note", "After today's check-in", `<p class="body">${esc(d.body)}</p>${d.mood_signal ? `<span class="pill">Mood: ${esc(d.mood_signal)} (AI estimate)</span> ` : ""}${(d.flags || []).includes("emergency") ? '<span class="pill help">Emergency flagged</span>' : ""}<p class="ai">${esc(d.ai_label || "")}</p>`],
+    ok: () => ["ok", `${esc(d.name)} pressed “I'm OK”`, ""],
+    help: () => ["help", `${esc(d.name)} pressed Help on the TV remote`, `<p>Call her now. If you cannot reach her, call ${esc(d.number)} for her address.</p>`],
+    emergency: () => ["emergency", "Chingu heard a possible emergency", `<p>She said: “${esc(d.said)}”. Chingu told her to call ${esc(d.number)}.</p>`],
+    taken: () => ["taken", `${esc(d.name)} taken at ${clock(d.at)}`, ""],
+    seen: () => ["seen", `Mom opened your postcard`, ""],
+    tv_on: () => ["seen", `The TV came on at ${clock(d.at)}`, ""],
+    message: () => ["seen", `You sent a postcard`, `<p>${esc(d.text)}</p>`],
+  };
+  if (!map[e.kind]) return;
+  const [cls, title, body] = map[e.kind]();
+  const el = document.createElement("article");
+  el.className = `card event ${cls}`;
+  el.innerHTML = `<span class="dot"></span><div><strong>${title}</strong> <span class="t">${fmt(e.at)}</span>${body}</div>`;
+  const feed = $("feed");
+  if (feed.querySelector(".empty")) feed.innerHTML = "";
+  feed.prepend(el);
+}
+
+async function state() {
+  const s = await (await fetch("/api/state")).json();
+  const r = s.routine;
+  $("title").textContent = `${s.parent.first}'s TV`;
+  $("sub").textContent = `${s.parent.city} · you are ${s.family[0].name} in ${s.family[0].city}`;
+  $("tvOn").textContent = r.today.tv_on ? clock(r.today.tv_on) : "Not yet";
+  $("usual").textContent = clock(r.usual_tv_on);
+  $("checkin").textContent = clock(r.today.checkin);
+  $("learned").textContent = `Learned on the TV from the last ${r.days_learned} days (${r.kind_of_day}s). Times are ${s.parent.first}'s, in ${s.parent.city}. If the TV stays off after ${clock(r.quiet_after)}, you get a gentle note.`;
+}
+
+async function poll() {
+  for (;;) {
+    try {
+      const r = await (await fetch(`/api/events?after=${after}&wait=20&audience=family`)).json();
+      after = r.last;
+      r.events.forEach(render);
+      if (r.events.length) state();
+    } catch { await new Promise((res) => setTimeout(res, 3000)); }
+  }
+}
+
+$("send").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("go").disabled = true;
+  const photo = document.querySelector('input[name="photo"]:checked')?.value;
+  await fetch("/api/family/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: me, text: $("text").value, photo }) });
+  $("go").textContent = "Sent ✓";
+  setTimeout(() => { $("go").textContent = "Send to Mom's TV"; $("go").disabled = false; }, 2500);
+});
+
+state().then(async () => {
+  const s = await (await fetch("/api/state")).json();
+  after = 0;
+  poll();
+});
+</script>
+</body>
+</html>

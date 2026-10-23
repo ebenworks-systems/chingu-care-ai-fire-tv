@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Chingu Care AI TV",
+    "slug": "chingu-care-ai-fire-tv",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "co.ebenworks.chingucare.tv",
+      "adaptiveIcon": {
+        "backgroundColor": "#C4613A",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": false
+    },
+    "plugins": [
+      [
+        "@react-native-tvos/config-tv",
+        {
+          "isTV": true,
+          "androidTVBanner": "./assets/tv/banner.png"
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Chingu Care AI listens only while you hold a conversation."
+        }
+      ],
+      "expo-video",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
+  }
+}

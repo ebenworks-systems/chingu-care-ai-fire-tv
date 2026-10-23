@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 880" width="1600" height="880" font-family="Inter, Pretendard, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1C3D52"/>
+    </marker>
+    <filter id="lift" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#1C3D52" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="880" fill="#FAF5EE"/>
+
+  <text x="60" y="78" font-size="40" font-family="Fraunces, Georgia, serif" fill="#1C3D52">Chingu Care AI on Fire TV: how it fits together</text>
+  <text x="60" y="116" font-size="22" fill="#5E6B72">The parent's TV is the care hub. The demo runs on one laptop and an Android TV emulator.</text>
+
+  <!-- TV app -->
+  <g filter="url(#lift)">
+    <rect x="60" y="160" width="470" height="560" rx="28" fill="#FFFFFF"/>
+  </g>
+  <rect x="60" y="160" width="470" height="70" rx="28" fill="#F3D9CB"/>
+  <rect x="60" y="200" width="470" height="30" fill="#F3D9CB"/>
+  <text x="90" y="205" font-size="26" font-weight="700" fill="#1C3D52">Fire TV app · Fire OS</text>
+  <text x="90" y="262" font-size="19" fill="#5E6B72">React Native for TV (react-native-tvos), Expo SDK 58</text>
+  <g font-size="21" fill="#24333D">
+    <text x="90" y="312">● Home hub: D-pad focus, 10-foot type, light</text>
+    <text x="90" y="356">● Daily check-in: speaks, listens, remote</text>
+    <text x="90" y="400">● AI-suggested answers on the remote</text>
+    <text x="90" y="444">● Medicine reminder pauses the video,</text>
+    <text x="112" y="474">resumes after “I took it”</text>
+    <text x="90" y="518">● Family postcards: photos and video</text>
+    <text x="90" y="562">● I'm OK and Help (hold OK 2 seconds)</text>
+    <text x="90" y="606">● English and Korean</text>
+  </g>
+  <rect x="90" y="636" width="410" height="58" rx="16" fill="#D5EAE4"/>
+  <text x="110" y="672" font-size="19" font-weight="700" fill="#2B7A6B">tv-care-kit (MIT, open source)</text>
+
+  <!-- Hub -->
+  <g filter="url(#lift)">
+    <rect x="640" y="160" width="430" height="560" rx="28" fill="#FFFFFF"/>
+  </g>
+  <rect x="640" y="160" width="430" height="70" rx="28" fill="#F5E6D3"/>
+  <rect x="640" y="200" width="430" height="30" fill="#F5E6D3"/>
+  <text x="670" y="205" font-size="26" font-weight="700" fill="#1C3D52">Care hub · Python, FastAPI</text>
+  <g font-size="21" fill="#24333D">
+    <text x="670" y="276">Companion turns + reply suggestions</text>
+    <text x="670" y="320">Emergency check on every sentence:</text>
+    <text x="692" y="350">phrase table + model check → 911</text>
+    <text x="670" y="394">Family note after each check-in</text>
+    <text x="670" y="438">Routine learner: when the TV comes on</text>
+    <text x="670" y="482">Medicine clock and doses</text>
+    <text x="670" y="526">Event stream (long poll) for TV + family</text>
+    <text x="670" y="570">Speech out: Piper (local)</text>
+    <text x="670" y="614">Speech in: faster-whisper (local)</text>
+  </g>
+  <text x="670" y="680" font-size="18" fill="#5E6B72">No model? A scripted companion answers.</text>
+
+  <!-- Model -->
+  <g filter="url(#lift)">
+    <rect x="1180" y="160" width="360" height="230" rx="28" fill="#FFFFFF"/>
+  </g>
+  <text x="1210" y="215" font-size="26" font-weight="700" fill="#1C3D52">Language model</text>
+  <g font-size="20" fill="#24333D">
+    <text x="1210" y="262">Any OpenAI-compatible</text>
+    <text x="1210" y="292">/v1/chat/completions</text>
+    <text x="1210" y="338" fill="#5E6B72">Demo: Njere Engine, the</text>
+    <text x="1210" y="366" fill="#5E6B72">Ebenworks model gateway</text>
+  </g>
+
+  <!-- Family phone -->
+  <g filter="url(#lift)">
+    <rect x="1180" y="450" width="360" height="270" rx="28" fill="#FFFFFF"/>
+  </g>
+  <text x="1210" y="505" font-size="26" font-weight="700" fill="#1C3D52">Family's phone</text>
+  <g font-size="20" fill="#24333D">
+    <text x="1210" y="550">Web page from the hub</text>
+    <text x="1210" y="590">● Note after each check-in</text>
+    <text x="1210" y="628">● I'm OK, Help, emergency</text>
+    <text x="1210" y="666">● Doses taken, TV-on time</text>
+    <text x="1210" y="704">● Send a postcard to the TV</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#1C3D52" stroke-width="3" fill="none">
+    <line x1="534" y1="380" x2="634" y2="380" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+    <line x1="1074" y1="275" x2="1174" y2="275" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+    <line x1="1074" y1="585" x2="1174" y2="585" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  </g>
+  <text x="552" y="415" font-size="17" fill="#5E6B72">HTTP and</text>
+  <text x="552" y="438" font-size="17" fill="#5E6B72">events</text>
+
+  <text x="60" y="800" font-size="20" fill="#5E6B72">Chingu Care AI is not a medical device and does not replace 911. Demo household: invented people and data.</text>
+  <text x="60" y="840" font-size="20" fill="#C4613A" font-weight="700">An Ebenworks product.</text>
+</svg>

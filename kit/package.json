@@ -1,0 +1,41 @@
+{
+  "name": "@ebenworks/tv-care-kit",
+  "version": "0.1.0",
+  "description": "React Native TV building blocks for older viewers: focus you can see from the sofa, a 10-foot type scale, and reminders that pause what is playing and resume it after an answer.",
+  "license": "MIT",
+  "author": "Ebenworks Systems (Private) Limited <contact@ebenworks.co>",
+  "homepage": "https://gitlab.com/ebenworks-systems/tv-care-kit",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/ebenworks-systems/tv-care-kit.git"
+  },
+  "main": "src/index.ts",
+  "react-native": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.ts"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": "*"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "keywords": [
+    "react-native",
+    "react-native-tvos",
+    "fire-tv",
+    "android-tv",
+    "accessibility",
+    "older-adults",
+    "focus",
+    "d-pad",
+    "10-foot-ui"
+  ]
+}

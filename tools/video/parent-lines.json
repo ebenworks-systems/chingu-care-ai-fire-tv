@@ -1,0 +1,5 @@
+[
+  {"id": "parent-sleep", "voice": "en-US-josie", "style": "Conversational", "say": "I slept well. But my knee hurts a little this morning."},
+  {"id": "parent-plans", "voice": "en-US-josie", "style": "Conversational", "say": "I'll rest it. Then I'll watch my drama and call Ji-woo."},
+  {"id": "parent-chest", "voice": "en-US-josie", "style": "Conversational", "say": "Oh... my chest feels tight. It's hard to breathe."}
+]

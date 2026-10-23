@@ -1,0 +1,400 @@
+"""Chingu Care AI TV hub: the small server the Fire TV app and the family's phone page talk to.
+
+Run:  .venv/bin/uvicorn server:app --host 0.0.0.0 --port 8797
+The Android TV emulator reaches it at http://10.0.2.2:8797.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import io
+import json
+import os
+import time
+import uuid
+import wave
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+import household as hh
+from companion import Companion, Session
+
+ROOT = Path(__file__).parent
+CACHE = ROOT / ".cache" / "tts"
+CACHE.mkdir(parents=True, exist_ok=True)
+VOICE = Path(os.environ.get("PIPER_VOICE", ROOT / "voices" / "en_US-ljspeech-high.onnx"))
+MAX_UPLOAD = 8 * 1024 * 1024
+
+# DEMO_START=HH:MM starts the household's clock at that time today, so a demo
+# recorded in the evening can still show the parent's morning. Unset = real time.
+_demo_start = os.environ.get("DEMO_START")
+_offset = timedelta(0)
+if _demo_start:
+    _h, _m = (int(x) for x in _demo_start.split(":"))
+    _real = datetime.now()
+    _offset = _real.replace(hour=_h, minute=_m, second=0, microsecond=0) - _real
+
+
+def hub_now() -> datetime:
+    return datetime.now() + _offset
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    clock = asyncio.create_task(reminder_clock())
+    yield
+    clock.cancel()
+
+
+app = FastAPI(title="Chingu Care AI TV hub", lifespan=lifespan)
+app.mount("/media", StaticFiles(directory=ROOT / "media"), name="media")
+
+
+def _iso(minutes_ago: int = 0) -> str:
+    return (hub_now() - timedelta(minutes=minutes_ago)).isoformat(timespec="seconds")
+
+
+def _family(fid: str) -> dict:
+    return next(m for m in hh.FAMILY if m["id"] == fid)
+
+
+class Hub:
+    """Everything the demo household has, in memory; restart the hub to reset."""
+
+    def __init__(self) -> None:
+        self.events: list[dict] = []
+        self.cond = asyncio.Condition()
+        self.sessions: dict[str, Session] = {}
+        self.lang = "en"
+        self.log = hh.routine_log(today=hub_now().date())
+        self.today: dict = {"tv_on": None, "checkin": None}
+        self.doses: dict[str, dict] = {m["id"]: {"status": "due", "at": None} for m in hh.MEDICINES}
+        self.messages = [
+            {
+                "id": f"m{i}",
+                "from": p["from"],
+                "from_name": _family(p["from"])["name"],
+                "text": p["text"],
+                "photo": p["photo"],
+                "video": p.get("video"),
+                "at": _iso(p["minutes_ago"]),
+                "seen": False,
+            }
+            for i, p in enumerate(hh.POSTCARDS)
+        ]
+        self.notes: list[dict] = []
+        self.timeline: list[dict] = []
+
+    async def emit(self, kind: str, data: dict, audience: str = "all") -> dict:
+        async with self.cond:
+            event = {"id": len(self.events) + 1, "kind": kind, "audience": audience, "at": _iso(), "data": data}
+            self.events.append(event)
+            self.timeline.insert(0, event)
+            self.cond.notify_all()
+        return event
+
+    def state(self) -> dict:
+        routine = hh.learn_routine(self.log, now=hub_now())
+        return {
+            "demo_notice": hh.DEMO_NOTICE,
+            "lang": self.lang,
+            "parent": hh.PARENT,
+            "family": hh.FAMILY,
+            "medicines": [{**m, **self.doses[m["id"]]} for m in hh.MEDICINES],
+            "messages": self.messages,
+            "notes": self.notes,
+            "routine": {**routine, "today": self.today, "log": self.log},
+            "companion_live": companion.live,
+            "last_event": len(self.events),
+            "clock": hub_now().isoformat(timespec="seconds"),
+        }
+
+
+hub = Hub()
+companion = Companion({"parent": hh.PARENT, "family": hh.FAMILY, "medicines": hh.MEDICINES})
+
+
+@app.get("/api/state")
+async def state():
+    return hub.state()
+
+
+@app.get("/api/events")
+async def events(after: int = 0, wait: float = 20.0, audience: str = "tv"):
+    """Long poll: returns events after `after`, waiting up to `wait` seconds for one."""
+    wait = max(0.0, min(wait, 25.0))
+
+    def pick():
+        return [e for e in hub.events[after:] if e["audience"] in ("all", audience)]
+
+    async with hub.cond:
+        if not pick() and wait:
+            try:
+                await asyncio.wait_for(hub.cond.wait_for(lambda: len(hub.events) > after), timeout=wait)
+            except asyncio.TimeoutError:
+                pass
+    return {"events": pick(), "last": len(hub.events)}
+
+
+class LangIn(BaseModel):
+    lang: str
+
+
+@app.post("/api/lang")
+async def set_lang(body: LangIn):
+    if body.lang not in ("en", "ko"):
+        raise HTTPException(400, "lang must be en or ko")
+    hub.lang = body.lang
+    return {"lang": hub.lang}
+
+
+@app.post("/api/activity/tv-on")
+async def tv_on():
+    """The TV app reports that it came to the front: the routine's signal for today."""
+    if not hub.today["tv_on"]:
+        hub.today["tv_on"] = hub_now().strftime("%H:%M")
+        await hub.emit("tv_on", {"at": hub.today["tv_on"]}, audience="family")
+    return hub.today
+
+
+# --- The check-in conversation --------------------------------------------
+
+
+class TurnIn(BaseModel):
+    session: str
+    text: str
+
+
+@app.post("/api/checkin/start")
+async def checkin_start():
+    sid = uuid.uuid4().hex[:12]
+    session = Session(id=sid, lang=hub.lang)
+    hub.sessions[sid] = session
+    opened = await companion.open(session)
+    return {"session": sid, **opened}
+
+
+@app.post("/api/checkin/turn")
+async def checkin_turn(body: TurnIn):
+    session = hub.sessions.get(body.session)
+    if not session:
+        raise HTTPException(404, "no such check-in")
+    text = body.text.strip()[:400]
+    if not text:
+        raise HTTPException(400, "empty answer")
+    result = await companion.turn(session, text)
+    if result.get("emergency"):
+        await hub.emit(
+            "emergency",
+            {"kind": result["emergency"]["kind"], "said": text, "number": result["emergency"]["number"]},
+        )
+    return result
+
+
+class EndIn(BaseModel):
+    session: str
+
+
+@app.post("/api/checkin/end")
+async def checkin_end(body: EndIn):
+    session = hub.sessions.pop(body.session, None)
+    if not session:
+        raise HTTPException(404, "no such check-in")
+    note = await companion.note(session)
+    note.update(
+        {
+            "id": f"n{len(hub.notes) + 1}",
+            "at": _iso(),
+            "minutes": max(1, len([t for t in session.turns if t["role"] == "user"])),
+            "sent_to": [m["name"] for m in hh.FAMILY],
+        }
+    )
+    hub.notes.insert(0, note)
+    hub.today["checkin"] = hub_now().strftime("%H:%M")
+    await hub.emit("note", note, audience="family")
+    return note
+
+
+# --- One-press buttons on the remote ---------------------------------------
+
+
+@app.post("/api/ok")
+async def im_ok():
+    await hub.emit("ok", {"name": hh.PARENT["first"]}, audience="family")
+    return {"sent_to": [m["name"] for m in hh.FAMILY]}
+
+
+@app.post("/api/help")
+async def help_alert():
+    await hub.emit("help", {"name": hh.PARENT["first"], "number": hh.PARENT["emergency_number"]})
+    return {"sent_to": [m["name"] for m in hh.FAMILY], "number": hh.PARENT["emergency_number"]}
+
+
+# --- Medicines -------------------------------------------------------------
+
+
+@app.post("/api/medicine/{mid}/taken")
+async def taken(mid: str):
+    if mid not in hub.doses:
+        raise HTTPException(404, "no such medicine")
+    hub.doses[mid] = {"status": "taken", "at": hub_now().strftime("%H:%M")}
+    med = next(m for m in hh.MEDICINES if m["id"] == mid)
+    await hub.emit("taken", {"id": mid, "name": med["name"], "at": hub.doses[mid]["at"]}, audience="family")
+    return hub.doses[mid]
+
+
+@app.post("/api/medicine/{mid}/snooze")
+async def snooze(mid: str):
+    if mid not in hub.doses:
+        raise HTTPException(404, "no such medicine")
+    hub.doses[mid] = {"status": "snoozed", "at": (hub_now() + timedelta(minutes=10)).strftime("%H:%M")}
+    return hub.doses[mid]
+
+
+@app.post("/api/demo/remind/{mid}")
+async def demo_remind(mid: str):
+    """Fires a medicine reminder now. In the product the hub's clock fires it at the set time."""
+    med = next((m for m in hh.MEDICINES if m["id"] == mid), None)
+    if not med:
+        raise HTTPException(404, "no such medicine")
+    hub.doses[mid] = {"status": "due", "at": None}
+    await hub.emit("reminder", med, audience="tv")
+    return med
+
+
+async def reminder_clock():
+    """Fires each medicine reminder once at its set time (parent's local time)."""
+    fired: set[str] = set()
+    while True:
+        now = hub_now()
+        for med in hh.MEDICINES:
+            key = f'{now.date()}-{med["id"]}'
+            if med["time"] == now.strftime("%H:%M") and key not in fired and hub.doses[med["id"]]["status"] != "taken":
+                fired.add(key)
+                await hub.emit("reminder", med, audience="tv")
+        await asyncio.sleep(20)
+
+
+
+
+# --- The family channel ----------------------------------------------------
+
+
+class MessageIn(BaseModel):
+    sender: str = "jiwoo"
+    text: str
+    photo: str | None = None
+
+
+@app.post("/api/family/message")
+async def family_message(body: MessageIn):
+    if body.sender not in {m["id"] for m in hh.FAMILY}:
+        raise HTTPException(400, "unknown family member")
+    text = body.text.strip()[:280]
+    if not text:
+        raise HTTPException(400, "empty message")
+    photo = body.photo if body.photo and body.photo.startswith("/media/") else None
+    msg = {
+        "id": f"m{len(hub.messages) + 1}",
+        "from": body.sender,
+        "from_name": _family(body.sender)["name"],
+        "text": text,
+        "photo": photo,
+        "at": _iso(),
+        "seen": False,
+    }
+    hub.messages.insert(0, msg)
+    await hub.emit("message", msg, audience="tv")
+    return msg
+
+
+@app.post("/api/family/message/{mid}/seen")
+async def message_seen(mid: str):
+    for m in hub.messages:
+        if m["id"] == mid and not m["seen"]:
+            m["seen"] = True
+            await hub.emit("seen", {"id": mid, "from_name": m["from_name"]}, audience="family")
+    return {"ok": True}
+
+
+# --- Voice: speech out (Piper) and speech in (faster-whisper) ---------------
+
+_piper = None
+_whisper = None
+
+
+def _tts_file(text: str) -> Path:
+    global _piper
+    digest = hashlib.sha1(f"{VOICE.name}|{text}".encode()).hexdigest()[:20]
+    path = CACHE / f"{digest}.wav"
+    if path.exists():
+        return path
+    if _piper is None:
+        from piper import PiperVoice
+
+        _piper = PiperVoice.load(str(VOICE))
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wav:
+        _piper.synthesize_wav(text, wav)
+    path.write_bytes(buf.getvalue())
+    return path
+
+
+@app.get("/api/tts")
+async def tts(text: str):
+    text = text.strip()[:600]
+    if not text:
+        raise HTTPException(400, "empty text")
+    path = await asyncio.to_thread(_tts_file, text)
+    # A record of what the TV was told to say and when, used to put the same audio in the demo film.
+    with open(CACHE.parent / "spoken.jsonl", "a", encoding="utf-8") as log:
+        log.write(json.dumps({"t": time.time(), "file": path.name, "text": text}) + "\n")
+    return FileResponse(path, media_type="audio/wav")
+
+
+@app.post("/api/asr")
+async def asr(audio: UploadFile):
+    global _whisper
+    data = await audio.read(MAX_UPLOAD + 1)
+    if len(data) > MAX_UPLOAD:
+        raise HTTPException(413, "recording too long")
+
+    def run() -> str:
+        global _whisper
+        if _whisper is None:
+            from faster_whisper import WhisperModel
+
+            _whisper = WhisperModel(os.environ.get("WHISPER_MODEL", "small"), device=os.environ.get("WHISPER_DEVICE", "cpu"), compute_type="int8")
+        segments, _ = _whisper.transcribe(io.BytesIO(data), language=None if hub.lang == "ko" else "en", vad_filter=True)
+        return " ".join(s.text.strip() for s in segments).strip()
+
+    text = await asyncio.to_thread(run)
+    return {"text": text}
+
+
+# --- Pages -----------------------------------------------------------------
+
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/family", response_class=HTMLResponse)
+async def family_page():
+    return HTMLResponse((ROOT / "family" / "index.html").read_text(encoding="utf-8"))
+
+
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True, "companion": "model" if companion.live else "scripted", "time": time.time()}
+
+
+@app.middleware("http")
+async def cap_body(request: Request, call_next):
+    length = request.headers.get("content-length")
+    if length and length.isdigit() and int(length) > MAX_UPLOAD:
+        return JSONResponse({"detail": "request too large"}, status_code=413)
+    return await call_next(request)
