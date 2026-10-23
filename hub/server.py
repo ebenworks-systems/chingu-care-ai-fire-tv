@@ -32,14 +32,14 @@ CACHE.mkdir(parents=True, exist_ok=True)
 VOICE = Path(os.environ.get("PIPER_VOICE", ROOT / "voices" / "en_US-ljspeech-high.onnx"))
 MAX_UPLOAD = 8 * 1024 * 1024
 
-# DEMO_START=HH:MM starts the household's clock at that time today, so a demo
+# DEMO_START=HH:MM[:SS] starts the household's clock at that time today, so a demo
 # recorded in the evening can still show the parent's morning. Unset = real time.
 _demo_start = os.environ.get("DEMO_START")
 _offset = timedelta(0)
 if _demo_start:
-    _h, _m = (int(x) for x in _demo_start.split(":"))
+    _h, _m, _s = ([int(x) for x in _demo_start.split(":")] + [0])[:3]
     _real = datetime.now()
-    _offset = _real.replace(hour=_h, minute=_m, second=0, microsecond=0) - _real
+    _offset = _real.replace(hour=_h, minute=_m, second=_s, microsecond=0) - _real
 
 
 def hub_now() -> datetime:
@@ -47,9 +47,11 @@ def hub_now() -> datetime:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    clock = asyncio.create_task(reminder_clock())
+    # REMINDER_CLOCK=off leaves reminders to /api/demo/remind, for a recorded demo with exact timing.
+    clock = None if os.environ.get("REMINDER_CLOCK") == "off" else asyncio.create_task(reminder_clock())
     yield
-    clock.cancel()
+    if clock:
+        clock.cancel()
 
 
 app = FastAPI(title="Chingu Care AI TV hub", lifespan=lifespan)

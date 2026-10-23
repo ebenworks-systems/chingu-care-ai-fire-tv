@@ -107,7 +107,7 @@ export function CheckIn({ s, hub, onEmergency, onDone }: Props) {
           <CareText role="label" style={{ color: colors.persimmon, fontFamily: fonts.sansBold }}>
             {s.noteTitle}
           </CareText>
-          <CareText role="title" style={styles.noteBody}>
+          <CareText role="heading" style={[styles.noteBody, { fontFamily: families.title }]}>
             {note.body}
           </CareText>
           <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   controls: { flex: 1, gap: 10 },
   mic: { backgroundColor: colors.persimmonSoft, borderRadius: radius.card, paddingHorizontal: 18, paddingVertical: 14, gap: 2 },
   chip: { backgroundColor: colors.paper, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 9 },
-  noteWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
-  noteCard: { backgroundColor: colors.paper, borderRadius: 28, padding: 36, gap: 16, width: "78%" },
+  noteWrap: { flex: 1, alignItems: "center", justifyContent: "flex-start", paddingTop: 8 },
+  noteCard: { backgroundColor: colors.paper, borderRadius: 28, paddingHorizontal: 40, paddingVertical: 30, gap: 14, width: "84%", maxHeight: "100%" },
   noteBody: { color: colors.navy },
 });

@@ -58,3 +58,7 @@ tools/video/work/
 CLAUDE.local.md
 .claude/
 *.apk
+
+# Devpost working copy (pasted into the form, kept out of the repository)
+submission/
+__pycache__/

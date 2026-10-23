@@ -1,0 +1,92 @@
+[
+ {
+  "id": "n01",
+  "say": "Meet our demo household. Park Yung-hee, seventy-six, lives alone in Los Angeles. Her children live in Seoul and Seattle.",
+  "caption": "Meet our demo household. Park Young-hee, 76, lives alone in Los Angeles. Her children live in Seoul and Seattle."
+ },
+ {
+  "id": "n02",
+  "say": "Chin-goo Care A.I. makes her TV the care hub.",
+  "caption": "Chingu Care AI makes her TV the care hub."
+ },
+ {
+  "id": "n03",
+  "say": "One press on the remote starts today's check-in.",
+  "caption": "One press on the remote starts today's check-in."
+ },
+ {
+  "id": "n04",
+  "say": "She answers the way she would answer a friend. Press OK, and talk.",
+  "caption": "She answers the way she would answer a friend. Press OK, and talk."
+ },
+ {
+  "id": "n05",
+  "say": "Or she picks an answer with the remote. The A.I. writes these three for this moment.",
+  "caption": "Or she picks an answer with the remote. The AI writes these three for this moment."
+ },
+ {
+  "id": "n06",
+  "say": "When she's done, her family gets a short note, written by A.I. Never the conversation itself.",
+  "caption": "When she's done, her family gets a short note, written by AI. Never the conversation itself."
+ },
+ {
+  "id": "n07",
+  "say": "Jee-woo reads it in Seoul, next to when the TV came on, and the morning the hub has learned from two weeks of her mom's TV.",
+  "caption": "Ji-woo reads it in Seoul, next to when the TV came on, and the morning the hub has learned from two weeks of her mom's TV."
+ },
+ {
+  "id": "n08",
+  "say": "Postcards from the family play on the big screen.",
+  "caption": "Postcards from the family play on the big screen."
+ },
+ {
+  "id": "n09",
+  "say": "When it's time for her blood pressure tablet, the reminder pauses the video, and waits for her.",
+  "caption": "When it's time for her blood pressure tablet, the reminder pauses the video and waits for her."
+ },
+ {
+  "id": "n10",
+  "say": "One press. The video carries on, and the family sees the dose.",
+  "caption": "One press. The video carries on, and the family sees the dose."
+ },
+ {
+  "id": "n11",
+  "say": "Jee-woo can write straight back to the TV.",
+  "caption": "Ji-woo can write straight back to the TV."
+ },
+ {
+  "id": "n12",
+  "say": "Every sentence she says is checked for an emergency, by a phrase list and a second model.",
+  "caption": "Every sentence she says is checked for an emergency, by a phrase list and a second model."
+ },
+ {
+  "id": "n13",
+  "say": "Chin-goo Care A.I. tells her to call nine one one, and alerts her family at once. It is not a medical device, and says so.",
+  "caption": "Chingu Care AI tells her to call 911 and alerts her family at once. It is not a medical device, and says so."
+ },
+ {
+  "id": "n15",
+  "say": "It speaks Korean too.",
+  "caption": "It speaks Korean too."
+ },
+ {
+  "id": "n16",
+  "say": "Under the hood: React Native for Fire OS, a small Python hub, and any open A.I. compatible model.",
+  "caption": "Under the hood: React Native for Fire OS, a small Python hub, and any OpenAI-compatible model."
+ },
+ {
+  "id": "n17",
+  "say": "The TV building blocks are a separate open source kit, M.I.T. licensed, with tests.",
+  "caption": "The TV building blocks are a separate open-source kit, MIT-licensed, with tests."
+ },
+ {
+  "id": "n18",
+  "say": "Chin-goo Care A.I. launched on Android phones on October twentieth. The TV app is new for this hackathon.",
+  "caption": "Chingu Care AI launched on Android phones on 20 October. The TV app is new for this hackathon."
+ },
+ {
+  "id": "n19",
+  "say": "Chin-goo Care A.I. Apart, but always near.",
+  "caption": "Chingu Care AI. Apart, but always near."
+ }
+]

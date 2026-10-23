@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFonts } from "expo-font";
+import { Image } from "expo-image";
 import { Fraunces_400Regular, Fraunces_500Medium } from "@expo-google-fonts/fraunces";
 import { StatusBar } from "expo-status-bar";
 import { BackHandler, StyleSheet, TVFocusGuideView, View } from "react-native";
 
 import { CareFocusable, CareText, Interrupt, InterruptOverlay, InterruptProvider, nextTextSize, TypeScaleProvider, useInterrupts, useTypeScale } from "./kit/src";
 import { api, Emergency, HubEvent, HubState, Medicine } from "./src/api";
-import { PillButton, RippleMark, syncClock, Tag } from "./src/components";
+import { BreathingMark, PillButton, RippleMark, syncClock, Tag } from "./src/components";
 import { Lang, strings } from "./src/i18n";
 import { CheckIn } from "./src/screens/CheckIn";
 import { Family } from "./src/screens/Family";
@@ -95,6 +96,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
         const first = await api.state();
         syncClock(first.clock);
         setHub(first);
+        Image.prefetch(first.messages.filter((m) => m.photo).map((m) => api.media(m.photo as string))).catch(() => {});
         setLang(first.lang);
         after = first.last_event;
         api.tvOn().catch(() => {});
@@ -193,7 +195,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
       <StatusBar hidden />
       <View style={styles.header}>
         <View style={styles.brand}>
-          <RippleMark size={40} />
+          <BreathingMark size={40} />
           <CareText role="heading" style={{ color: colors.navy, fontFamily: serif }}>
             {s.product}
           </CareText>

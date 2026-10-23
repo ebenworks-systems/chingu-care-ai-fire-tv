@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 
 import { CareFocusable, CareText } from "../kit/src";
@@ -24,6 +24,28 @@ export function syncClock(hubIso: string) {
   if (!Number.isNaN(hub)) clockOffset = hub - Date.now();
 }
 export const nowMs = () => Date.now() + clockOffset;
+
+/** The ripple mark breathing slowly: a sign that the companion is there, without demanding attention. */
+export function BreathingMark({ size = 40 }: { size?: number }) {
+  const breath = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breath, { toValue: 1, duration: 2400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(breath, { toValue: 0, duration: 2400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breath]);
+  const scale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const opacity = breath.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] });
+  return (
+    <Animated.View style={{ transform: [{ scale }], opacity }}>
+      <RippleMark size={size} />
+    </Animated.View>
+  );
+}
 
 export function useClock() {
   const [now, setNow] = useState(new Date(nowMs()));

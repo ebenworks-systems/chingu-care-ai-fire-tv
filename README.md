@@ -4,6 +4,16 @@ The parent's TV becomes the care hub. An older parent who lives alone talks with
 
 Built for the Build, Ship, Shape: Amazon Developer Hackathon, Fire TV track. MIT licence. Chingu Care AI is an Ebenworks product.
 
+**Demo film (2:46):** https://youtu.be/TQRwvdzxlJo · **Open-source kit:** [tv-care-kit](https://gitlab.com/ebenworks-systems/tv-care-kit) · **Friction log:** [docs/FRICTION-LOG.md](docs/FRICTION-LOG.md)
+
+| For judges | Where to see it |
+| --- | --- |
+| Voice, D-pad and visuals in one flow | Film 0:12 to 1:08; `src/screens/CheckIn.tsx` |
+| AI that adapts to the household | Answers the AI writes for each moment (film 0:45); the routine learned from 14 days of the TV coming on (film 1:09, `hub/household.py`); reminders that pause and resume the show (film 1:27, `kit/src/interrupt.ts`) |
+| Safety | Every sentence checked by a phrase table and a second model (film 1:47, `hub/companion.py`) |
+| TV design for older viewers | 18 dp type floor, three text sizes, visible focus, focus that returns after a reminder, Back towards home, English and Korean |
+| Tests and one-command run | `npm test` (16 kit and 6 hub tests), `./run-demo.sh` |
+
 ![Home screen on an Android TV emulator: greeting, today's check-in, I'm OK and Help, family postcards and medicines](docs/screens/home.png)
 
 ## Run it

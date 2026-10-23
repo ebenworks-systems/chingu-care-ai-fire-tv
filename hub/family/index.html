@@ -69,6 +69,8 @@
     <p class="ai" id="learned"></p>
   </section>
 
+  <div class="label">Today</div>
+  <section id="feed"><p class="empty card">Nothing yet today.</p></section>
   <div class="label">Send a postcard to the TV</div>
   <form class="card" id="send">
     <textarea id="text" maxlength="280" aria-label="Message" placeholder="Write to Mom…">Made your doenjang jjigae recipe tonight. Not as good as yours! Call me after your drama?</textarea>
@@ -76,8 +78,6 @@
     <button id="go" type="submit">Send to Mom's TV</button>
   </form>
 
-  <div class="label">Today</div>
-  <section id="feed"><p class="empty card">Nothing yet today.</p></section>
   <footer>Notes are written by AI from each conversation. Full conversations are not shared. Chingu Care AI is not a medical device and does not replace 911.</footer>
 </main>
 <script>
@@ -96,7 +96,7 @@ function render(e) {
     note: () => ["note", "After today's check-in", `<p class="body">${esc(d.body)}</p>${d.mood_signal ? `<span class="pill">Mood: ${esc(d.mood_signal)} (AI estimate)</span> ` : ""}${(d.flags || []).includes("emergency") ? '<span class="pill help">Emergency flagged</span>' : ""}<p class="ai">${esc(d.ai_label || "")}</p>`],
     ok: () => ["ok", `${esc(d.name)} pressed “I'm OK”`, ""],
     help: () => ["help", `${esc(d.name)} pressed Help on the TV remote`, `<p>Call her now. If you cannot reach her, call ${esc(d.number)} for her address.</p>`],
-    emergency: () => ["emergency", "Chingu heard a possible emergency", `<p>She said: “${esc(d.said)}”. Chingu told her to call ${esc(d.number)}.</p>`],
+    emergency: () => ["emergency", "Chingu Care AI heard a possible emergency", `<p>She said: “${esc(String(d.said).replace(/[.!?]+$/, ""))}.” Chingu Care AI told her to call ${esc(d.number)}.</p>`],
     taken: () => ["taken", `${esc(d.name)} taken at ${clock(d.at)}`, ""],
     seen: () => ["seen", `Mom opened your postcard`, ""],
     tv_on: () => ["seen", `The TV came on at ${clock(d.at)}`, ""],
