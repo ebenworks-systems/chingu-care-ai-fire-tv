@@ -87,7 +87,7 @@ Park Young-hee, Ji-woo, Daniel and Mina are invented, and so are their messages,
 
 ## Code hosting
 
-The company's GitHub account is under review by GitHub, so this code is on GitLab, public and MIT-licensed; a GitHub copy follows when access returns.
+The code is public and MIT-licensed on GitHub at https://github.com/ebenworks-systems/chingu-care-ai-fire-tv, with the same history on GitLab at https://gitlab.com/ebenworks-systems/chingu-care-ai-fire-tv.
 
 ## Licence
 
