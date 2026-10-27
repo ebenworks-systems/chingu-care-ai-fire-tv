@@ -32,5 +32,8 @@
   },
   "private": true,
   "description": "Chingu Care AI on Fire TV: the parent's TV becomes the care hub.",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "zod": "^4.6.6"
+  }
 }
