@@ -37,6 +37,7 @@ export function Family({ s, lang, hub, openId, onOpen, onHome }: Props) {
   const openedId = useRef<string | null>(null);
   const row = useRef<ScrollViewInstance>(null);
   const count = hub.messages.length;
+  const unseen = hub.messages.filter((m) => !m.seen).length;
   const index = Math.max(0, hub.messages.findIndex((m) => m.id === focusId));
   const offset = (i: number) => Math.max(0, i * (CARD + GAP) - (i > 0 ? PEEK : 0));
   useEffect(() => {
@@ -60,7 +61,8 @@ export function Family({ s, lang, hub, openId, onOpen, onHome }: Props) {
     <View style={{ flex: 1 }}>
       <Rise i={0} style={styles.head}>
         <View style={{ gap: 6 }}>
-          <Eyebrow icon="mail">{s.postcards(count)}</Eyebrow>
+          {/* The same count of new postcards as the home screen, so the two always agree. */}
+          <Eyebrow icon="mail">{unseen ? s.postcardsNew(count, unseen) : s.postcards(count)}</Eyebrow>
           <Headline role="title">{s.familyTitle}</Headline>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 22 }}>
@@ -90,19 +92,19 @@ export function Family({ s, lang, hub, openId, onOpen, onHome }: Props) {
               }}
               style={styles.card}
               look={ON_PAPER}
-              label={`${s.postcardFrom(m.from_name)}, ${ago(m.at, s)}: ${m.text}. ${s.position(i + 1, count)}`}
+              label={`${m.seen ? "" : `${s.newTag}. `}${s.postcardFrom(m.from_name)}, ${ago(m.at, s)}: ${m.text}. ${s.position(i + 1, count)}`}
             >
               <View style={[styles.cardPhoto, { height: photoHeight }]}>
                 {m.photo ? <Image source={{ uri: api.media(m.photo) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.hero }]} />}
                 <View style={styles.cardTags}>
-                  {m.video ? (
-                    <Tag tone="paper" icon="video" style={styles.photoTag}>
-                      {s.videoPostcard}
-                    </Tag>
-                  ) : null}
                   {!m.seen ? (
                     <Tag tone="brand" dot style={styles.photoTag}>
                       {s.newTag}
+                    </Tag>
+                  ) : null}
+                  {m.video ? (
+                    <Tag tone="paper" icon="video" style={styles.photoTag}>
+                      {s.videoPostcard}
                     </Tag>
                   ) : null}
                 </View>
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
   rowInner: { gap: GAP, paddingVertical: 18, paddingHorizontal: 40 },
   card: { ...panel, width: CARD, borderRadius: 32, overflow: "hidden" } as ViewStyle,
   cardPhoto: { width: CARD },
-  cardTags: { position: "absolute", top: 14, right: 14, flexDirection: "row", gap: 8 },
+  cardTags: { position: "absolute", top: 14, left: 14, flexDirection: "row", gap: 8 },
   photoTag: { paddingVertical: 4, boxShadow: shadow.lifted } as ViewStyle,
   cardBody: { paddingHorizontal: 18, paddingBottom: 16, paddingTop: 6, gap: 4 },
   cardWho: { flexDirection: "row", alignItems: "center", gap: 10 },
