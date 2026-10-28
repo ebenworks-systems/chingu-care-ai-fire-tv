@@ -4,61 +4,101 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F7FAF8">
 <title>Chingu Care AI · Family</title>
 <link rel="icon" href="/media/ripple.svg" type="image/svg+xml">
 <style>
-  @font-face { font-family: "Fraunces"; src: url(/media/fonts/Fraunces_500Medium.ttf); font-weight: 500; }
-  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Regular.otf); font-weight: 400; }
-  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-SemiBold.otf); font-weight: 600; }
-  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Bold.otf); font-weight: 700; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Regular.otf); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-SemiBold.otf); font-weight: 600; font-display: swap; }
+  @font-face { font-family: "Pretendard"; src: url(/media/fonts/Pretendard-Bold.otf); font-weight: 700; font-display: swap; }
+  /* Chingu Care AI's tokens since the 28 Oct 2026 redesign (dashboard/src/styles/chingu-tokens.css). */
   :root {
-    --canvas: #FAF5EE; --paper: #fff; --cream: #F5E6D3; --hair: #E7DCCD; --persimmon: #C4613A; --persimmon-soft: #F3D9CB;
-    --celadon: #2B7A6B; --celadon-soft: #D5EAE4; --navy: #1C3D52; --ink: #24333D; --muted: #5E6B72; --help: #C2413A; --help-soft: #F6DAD6;
+    --canvas: #F7FAF8; --paper: #fff; --hero: #F6E8D7; --hero-edge: #E7D4C0; --warm: #FFF4EB; --rule: #C8DBD2;
+    --brand: #C4613A; --brand-soft: #FAEDE7; --brand-text: #93421F; --action: #A64B29; --hwangto: #D4926A;
+    --celadon: #2B7A6B; --positive: #216052; --positive-soft: #E4F2EC; --navy: #1C3D52; --muted: #526873;
+    --help: #8F2834; --help-soft: #FFF1F1; --shadow: 0 24px 48px rgb(28 61 82 / 0.08);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.5 Pretendard, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  main { max-width: 460px; margin: 0 auto; padding: 18px 16px 40px; }
-  header { display: flex; align-items: center; gap: 10px; }
-  header img { width: 34px; height: 34px; }
-  header b { font: 500 20px Fraunces, Georgia, serif; color: var(--navy); }
-  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; background: var(--cream); color: var(--navy); }
-  .pill.ok { background: var(--celadon-soft); color: var(--celadon); }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; touch-action: manipulation; }
+  body { margin: 0; background: var(--canvas); color: var(--navy); font: 16px/1.55 Pretendard, system-ui, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  main { max-width: 480px; margin: 0 auto; padding: 12px 16px 48px; }
+  header { position: sticky; top: 10px; z-index: 5; display: flex; align-items: center; gap: 10px; background: rgb(255 255 255 / 0.92); backdrop-filter: blur(8px); border-radius: 999px; padding: 8px 16px 8px 10px; box-shadow: var(--shadow); }
+  header img { width: 32px; height: 32px; }
+  header b { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--navy); }
+  header .pill { margin-left: auto; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 11px; font-size: 13px; font-weight: 600; background: var(--warm); color: var(--brand-text); }
+  .pill.ok { background: var(--positive-soft); color: var(--positive); }
   .pill.help { background: var(--help-soft); color: var(--help); }
-  h1 { font: 500 30px/1.15 Fraunces, Georgia, serif; color: var(--navy); margin: 22px 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); margin: 0 0 18px; }
-  .card { background: var(--paper); border-radius: 20px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 0 var(--hair); }
+  .hero { position: relative; margin-top: 16px; padding: 22px 20px 20px; border-radius: 40px; background: radial-gradient(120% 90% at 0% 0%, var(--hero) 0%, var(--warm) 55%, var(--paper) 100%); box-shadow: inset 0 0 0 1px var(--hero-edge); overflow: hidden; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: var(--paper); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; color: var(--brand-text); box-shadow: inset 0 0 0 1px var(--hero-edge); }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+  h1 { font-weight: 700; font-size: 34px; line-height: 1.1; letter-spacing: -0.035em; color: var(--navy); margin: 12px 0 4px; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0; }
+  .orbit { position: relative; display: flex; align-items: center; justify-content: space-between; margin: 18px 4px 0; height: 92px; }
+  .orbit svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .who { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--navy); }
+  .who .face { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--paper); box-shadow: var(--shadow); object-fit: cover; background: var(--hero); }
+  .who .tv { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--paper); box-shadow: var(--shadow); }
+  .who .tv img { width: 36px; height: 36px; }
+  .card { background: var(--paper); border-radius: 24px; padding: 16px 18px; margin-bottom: 12px; box-shadow: var(--shadow); }
   .routine { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .routine div { background: var(--canvas); border-radius: 14px; padding: 10px; }
-  .routine small { display: block; color: var(--muted); font-size: 12px; }
-  .routine strong { font: 500 20px Fraunces, Georgia, serif; color: var(--navy); white-space: nowrap; }
-  .label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--persimmon); margin: 22px 0 8px; }
+  .routine div { background: var(--canvas); border-radius: 18px; padding: 10px 12px; }
+  .routine small { display: block; color: var(--muted); font-size: 12px; font-weight: 600; }
+  .routine strong { font-weight: 700; font-size: 19px; letter-spacing: -0.02em; color: var(--navy); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--brand-text); margin: 26px 0 10px; }
+  .label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); }
+  .label .count { margin-left: auto; color: var(--muted); font-weight: 600; font-size: 13px; }
   .event { display: flex; gap: 12px; align-items: flex-start; }
-  .dot { flex: none; width: 12px; height: 12px; border-radius: 6px; margin-top: 7px; background: var(--hair); }
-  .event.note .dot { background: var(--persimmon); } .event.ok .dot, .event.taken .dot { background: var(--celadon); }
-  .event.help .dot, .event.emergency .dot { background: var(--help); }
-  .event.help, .event.emergency { background: var(--help-soft); }
-  .event p { margin: 2px 0 0; }
-  .event .t { color: var(--muted); font-size: 13px; }
-  .event .body { font: 500 18px/1.35 Fraunces, Georgia, serif; color: var(--navy); }
-  .ai { color: var(--muted); font-size: 12px; margin-top: 6px; }
-  form textarea { width: 100%; border: 1px solid var(--hair); border-radius: 14px; padding: 12px; font: inherit; resize: none; min-height: 100px; background: var(--canvas); }
-  .photos { display: flex; gap: 8px; margin: 10px 0; overflow-x: auto; }
-  .photos label { flex: none; position: relative; }
+  .icon { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--warm); color: var(--brand-text); }
+  .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .event.note .icon { background: var(--brand-soft); }
+  .event.ok .icon, .event.taken .icon { background: var(--positive-soft); color: var(--positive); }
+  .event.help .icon, .event.emergency .icon { background: var(--paper); color: var(--help); }
+  .event.help, .event.emergency { background: var(--help-soft); box-shadow: inset 0 0 0 1.5px #E7B9BD; }
+  .event p { margin: 3px 0 0; }
+  .event .t { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .event .body { font-weight: 600; font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; color: var(--navy); }
+  .ai { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  form textarea { width: 100%; border: 0; border-radius: 18px; padding: 14px; font: inherit; font-size: 16px; resize: none; min-height: 108px; background: var(--canvas); color: var(--navy); box-shadow: inset 0 0 0 1.5px var(--rule); }
+  form textarea:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+  .photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 14px; }
+  .photos label { position: relative; cursor: pointer; }
   .photos input { position: absolute; opacity: 0; }
-  .photos img { width: 76px; height: 54px; object-fit: cover; border-radius: 10px; border: 3px solid transparent; display: block; }
-  .photos input:checked + img { border-color: var(--persimmon); }
-  .photos input:focus-visible + img { outline: 2px solid var(--navy); }
-  button { width: 100%; border: 0; border-radius: 999px; padding: 13px; font: 700 16px Pretendard, sans-serif; color: #fff; background: var(--persimmon); cursor: pointer; }
+  .photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 14px; border: 3px solid transparent; display: block; transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .2s; }
+  .photos label:hover img { transform: translateY(-2px); }
+  .photos input:checked + img { border-color: var(--action); }
+  .photos input:focus-visible + img { outline: 3px solid var(--navy); outline-offset: 2px; }
+  button { width: 100%; min-height: 52px; border: 0; border-radius: 999px; padding: 14px; font: 700 16px Pretendard, sans-serif; color: #fff; background: var(--action); cursor: pointer; box-shadow: 0 16px 32px rgb(166 75 41 / 0.24); transition: transform .16s cubic-bezier(.2,.8,.2,1), background .16s; }
+  button:hover { background: #93421F; }
+  button:active { transform: scale(0.98); }
+  button:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
   button:disabled { opacity: .6; }
   .empty { color: var(--muted); }
   footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+  .cue { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--paper); color: var(--brand-text); font-size: 13px; font-weight: 600; box-shadow: var(--shadow); transition: opacity .3s; z-index: 6; pointer-events: none; }
+  .cue svg, .top svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .cue svg { animation: nudge 1.6s ease-in-out infinite; }
+  .cue.gone { opacity: 0; }
+  .top { position: fixed; right: 16px; bottom: 18px; width: 48px; min-height: 48px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: var(--paper); color: var(--brand-text); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 6; }
+  .top:hover { background: var(--brand-soft); }
+  .top.on { opacity: 1; pointer-events: auto; }
+  @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .cue svg { animation: none; } * { transition: none !important; } }
 </style>
 </head>
 <body>
 <main>
-  <header><img src="/media/ripple.svg" alt=""><b>Chingu Care AI</b><span class="pill">Demo household</span></header>
-  <h1 id="title">Mom's TV</h1>
-  <p class="sub" id="sub">Los Angeles</p>
+  <header><img src="/media/ripple.svg" alt="" width="32" height="32"><b>Chingu Care AI</b><span class="pill">Demo household</span></header>
+  <section class="hero" aria-labelledby="title">
+    <span class="eyebrow" id="place">Los Angeles</span>
+    <h1 id="title">Mom's TV</h1>
+    <p class="sub" id="sub">Los Angeles</p>
+    <div class="orbit" aria-hidden="true">
+      <svg viewBox="0 0 300 92" preserveAspectRatio="none"><path d="M40 34 Q150 -14 260 34" fill="none" stroke="#D4926A" stroke-opacity=".62" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.5 9"/></svg>
+      <div class="who"><img class="face" id="me" src="/media/people/jiwoo.webp" alt="" width="64" height="64"><span id="meName">Ji-woo</span></div>
+      <div class="who"><span class="tv"><img src="/media/ripple.svg" alt="" width="36" height="36"></span><span id="tvName">TV</span></div>
+    </div>
+  </section>
 
   <section class="card" aria-label="Routine">
     <div class="routine">
@@ -69,17 +109,19 @@
     <p class="ai" id="learned"></p>
   </section>
 
-  <div class="label">Today</div>
-  <section id="feed"><p class="empty card">Nothing yet today.</p></section>
-  <div class="label">Send a postcard to the TV</div>
+  <h2 class="label">Today <span class="count" id="count"></span></h2>
+  <section id="feed" aria-live="polite"><p class="empty card">Nothing yet today.</p></section>
+  <h2 class="label">Send a postcard to the TV</h2>
   <form class="card" id="send">
-    <textarea id="text" maxlength="280" aria-label="Message" placeholder="Write to Mom…">Made your doenjang jjigae recipe tonight. Not as good as yours! Call me after your drama?</textarea>
+    <textarea id="text" name="message" autocomplete="off" maxlength="280" aria-label="Message" placeholder="Write to Mom…">Made your doenjang jjigae recipe tonight. Not as good as yours! Call me after your drama?</textarea>
     <div class="photos" id="photos"></div>
     <button id="go" type="submit">Send to Mom's TV</button>
   </form>
 
   <footer>Notes are written by AI from each conversation. Full conversations are not shared. Chingu Care AI is not a medical device and does not replace 911.</footer>
 </main>
+<div class="cue" id="cue" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>Scroll</div>
+<button class="top" id="top" type="button" aria-label="Back to top"><svg viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></button>
 <script>
 const $ = (id) => document.getElementById(id);
 const PHOTOS = ["/media/dinner.jpg", "/media/persimmons.jpg", "/media/river.jpg", "/media/drawing.jpg"];
@@ -88,8 +130,23 @@ const clock = (hhmm) => { if (!hhmm) return "—"; const [h, m] = hhmm.split(":"
 const fmt = (iso) => clock(iso.slice(11, 16));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-$("photos").innerHTML = PHOTOS.map((p, i) => `<label><input type="radio" name="photo" value="${p}" ${i === 0 ? "checked" : ""}><img src="${p}" alt="Photo ${i + 1}"></label>`).join("");
+$("photos").innerHTML = PHOTOS.map((p, i) => `<label><input type="radio" name="photo" value="${p}" ${i === 0 ? "checked" : ""}><img src="${p}" alt="Photo ${i + 1}" width="160" height="120"></label>`).join("");
 
+const ICON = {
+  note: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  ok: '<path d="M20 6 9 17l-5-5"/>', taken: '<path d="M20 6 9 17l-5-5"/>',
+  help: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/>',
+  emergency: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+  seen: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+};
+let shown = 0;
+// The hub's clock (it can run a demo morning), kept as an offset so the hero's time moves on between updates.
+let clockOffset = 0, parentCity = "";
+function tickPlace() {
+  const d = new Date(Date.now() + clockOffset);
+  $("place").textContent = `${clock(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`)} in ${parentCity}`;
+}
+setInterval(() => parentCity && tickPlace(), 30000);
 function render(e) {
   const d = e.data || {};
   const map = {
@@ -108,10 +165,12 @@ function render(e) {
   const [cls, title, body] = map[e.kind]();
   const el = document.createElement("article");
   el.className = `card event ${cls}`;
-  el.innerHTML = `<span class="dot"></span><div><strong>${title}</strong> <span class="t">${fmt(e.at)}</span>${body}</div>`;
+  el.innerHTML = `<span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICON[cls] || ICON.seen}</svg></span><div><strong>${title}</strong> <span class="t">${fmt(e.at)}</span>${body}</div>`;
   const feed = $("feed");
   if (feed.querySelector(".empty")) feed.innerHTML = "";
   feed.prepend(el);
+  shown += 1;
+  $("count").textContent = shown === 1 ? "1 update" : `${shown} updates`;
 }
 
 async function state() {
@@ -119,6 +178,12 @@ async function state() {
   const r = s.routine;
   $("title").textContent = `${s.parent.first}'s TV`;
   $("sub").textContent = `${s.parent.city} · you are ${s.family[0].name} in ${s.family[0].city}`;
+  clockOffset = Date.parse(s.clock) - Date.now();
+  parentCity = s.parent.city;
+  tickPlace();
+  $("meName").textContent = `${s.family[0].name} · ${s.family[0].city}`;
+  $("tvName").textContent = `${s.parent.first} · ${s.parent.city}`;
+  if (s.family[0].photo) $("me").src = s.family[0].photo;
   $("tvOn").textContent = r.today.tv_on ? clock(r.today.tv_on) : "Not yet";
   $("usual").textContent = clock(r.usual_tv_on);
   $("checkin").textContent = clock(r.today.checkin);
@@ -144,6 +209,15 @@ $("send").addEventListener("submit", async (ev) => {
   $("go").textContent = "Sent ✓";
   setTimeout(() => { $("go").textContent = "Send to Mom's TV"; $("go").disabled = false; }, 2500);
 });
+
+// Browsing cues: a scroll hint until the reader moves, and a way back up after two screens.
+const onScroll = () => {
+  if (scrollY > 40) $("cue").classList.add("gone");
+  $("top").classList.toggle("on", scrollY > innerHeight * 1.5);
+};
+addEventListener("scroll", onScroll, { passive: true });
+if (document.documentElement.scrollHeight <= innerHeight + 40) $("cue").classList.add("gone");
+$("top").addEventListener("click", () => scrollTo({ top: 0 }));
 
 state().then(async () => {
   const s = await (await fetch("/api/state")).json();

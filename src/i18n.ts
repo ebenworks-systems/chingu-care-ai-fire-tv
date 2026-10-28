@@ -69,6 +69,13 @@ const en = {
   emergencyFlagged: "Emergency flagged",
   waitingHub: "Waiting for the care hub…",
   hubOffline: "Hub offline",
+  yourFamily: "Your family",
+  postcards: (n: number) => (n === 1 ? "1 postcard" : `${n} postcards`),
+  position: (i: number, n: number) => `${i} of ${n}`,
+  browseHint: "Press left or right to look through",
+  medsDone: (t: number, n: number) => `${t} of ${n} taken`,
+  moreBelow: "More below",
+  noPostcards: "No postcards yet. When your family sends one, it appears here.",
 };
 
 const ko: typeof en = {
@@ -140,6 +147,13 @@ const ko: typeof en = {
   emergencyFlagged: "응급 상황 표시됨",
   waitingHub: "케어 허브를 기다리는 중…",
   hubOffline: "허브 연결 끊김",
+  yourFamily: "우리 가족",
+  postcards: (n) => `엽서 ${n}장`,
+  position: (i, n) => `${n}장 중 ${i}번째`,
+  browseHint: "리모컨의 왼쪽, 오른쪽 버튼으로 넘겨 보세요",
+  medsDone: (t, n) => `${n}개 중 ${t}개 드심`,
+  moreBelow: "아래에 더 있어요",
+  noPostcards: "아직 엽서가 없어요. 가족이 보내면 여기에 나타나요.",
 };
 
 export const strings = { en, ko };

@@ -12,8 +12,10 @@ Built for the Build, Ship, Shape: Amazon Developer Hackathon, Fire TV track. MIT
 | Adapts to the household | "Your usual time" from a routine learned from 14 days of TV-on times, a median, not a model (film 0:12); answers the AI writes for each moment (0:42); the family sees today against the usual morning (1:07); the next check-in follows up on the knee (1:39). Code: `hub/household.py`, `hub/companion.py` |
 | Reminders that pause and resume | Film 1:15 to 1:32; [tv-care-kit](https://gitlab.com/ebenworks-systems/tv-care-kit) `src/interrupt.ts` |
 | Safety | Every sentence checked by a phrase table and a second model (film 1:48, `hub/companion.py`) |
-| TV design for older viewers | 18 dp type floor, three text sizes, visible focus, focus that returns after a reminder, Back towards home, English and Korean switched live (film 2:14) |
+| TV design for older viewers | 18 dp type floor, three text sizes (at the two larger ones the screen scrolls with the remote and says there is more below), visible focus, focus that returns after a reminder, Back towards home, English and Korean switched live (film 2:14) |
 | Tests and one-command run | `npm test` (12 hub tests; the kit's 21 tests run in its own repository and its CI), `./run-demo.sh` |
+
+Since version 1.1 the TV carries Chingu Care AI's current design, the same as its website and phone apps: Pretendard type, the ripple's thin arcs, round family portraits and photographs of the parent's home. The film shows version 1.0.
 
 ![Home screen on an Android TV emulator: greeting, today's check-in, I'm OK and Help, family postcards and medicines](docs/screens/home.png)
 

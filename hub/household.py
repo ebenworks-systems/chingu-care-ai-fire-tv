@@ -22,8 +22,8 @@ PARENT = {
 }
 
 FAMILY = [
-    {"id": "jiwoo", "name": "Ji-woo", "relation": "daughter", "city": "Seoul"},
-    {"id": "daniel", "name": "Daniel", "relation": "son", "city": "Seattle"},
+    {"id": "jiwoo", "name": "Ji-woo", "relation": "daughter", "city": "Seoul", "city_ko": "서울", "photo": "/media/people/jiwoo.webp"},
+    {"id": "daniel", "name": "Daniel", "relation": "son", "city": "Seattle", "city_ko": "시애틀", "photo": "/media/people/daniel.webp"},
 ]
 
 MEDICINES = [

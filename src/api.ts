@@ -10,7 +10,7 @@ export type HubState = {
   demo_notice: string;
   lang: "en" | "ko";
   parent: { name: string; first: string; first_ko?: string; age: number; city: string; emergency_number: string };
-  family: { id: string; name: string; relation: string; city: string }[];
+  family: { id: string; name: string; relation: string; city: string; city_ko?: string; photo?: string | null }[];
   medicines: Medicine[];
   messages: Message[];
   notes: Note[];
