@@ -10,7 +10,16 @@ import { EdgeFade, Eyebrow, Headline, Icon, nowMs, ON_PAPER, OrbitArcs, panel, P
 import { Strings } from "../i18n";
 import { colors, fonts, radius, shadow } from "../theme";
 
-type Props = { s: Strings; lang: "en" | "ko"; hub: HubState; openId: string | null; onOpen: (id: string | null) => void; onHome: () => void };
+type Props = {
+  s: Strings;
+  lang: "en" | "ko";
+  hub: HubState;
+  openId: string | null;
+  onOpen: (id: string | null) => void;
+  onHome: () => void;
+  /** Called once the hub has marked a postcard seen, so the row and the home count both update. */
+  onSeen: () => void;
+};
 
 const CARD = 300;
 const GAP = 24;
@@ -25,7 +34,7 @@ function ago(iso: string, s: Strings) {
   return s.dAgo(Math.round(mins / 1440));
 }
 
-export function Family({ s, lang, hub, openId, onOpen, onHome }: Props) {
+export function Family({ s, lang, hub, openId, onOpen, onHome, onSeen }: Props) {
   const { size } = useTypeScale();
   // Larger words take room from the photographs, so the whole row and its position stay on screen.
   const photoHeight = size === "large" ? 148 : size === "larger" ? 124 : 100;
@@ -48,7 +57,7 @@ export function Family({ s, lang, hub, openId, onOpen, onHome }: Props) {
     const f = hub.family.find((p) => p.id === m.from);
     return f?.photo ? api.media(f.photo) : null;
   };
-  if (open) return <Postcard s={s} msg={open} portrait={photoOf(open)} onBack={() => onOpen(null)} />;
+  if (open) return <Postcard s={s} msg={open} portrait={photoOf(open)} onBack={() => onOpen(null)} onSeen={onSeen} />;
 
   // Each press of left or right moves one postcard and the row follows, so the
   // focused card always sits whole in view with its neighbours peeking.
@@ -165,9 +174,9 @@ function FamilyOrbit({ hub, lang }: { hub: HubState; lang: "en" | "ko" }) {
   );
 }
 
-function Postcard({ s, msg, portrait, onBack }: { s: Strings; msg: Message; portrait: string | null; onBack: () => void }) {
+function Postcard({ s, msg, portrait, onBack, onSeen }: { s: Strings; msg: Message; portrait: string | null; onBack: () => void; onSeen: () => void }) {
   useEffect(() => {
-    if (!msg.seen) api.seen(msg.id).catch(() => {});
+    if (!msg.seen) api.seen(msg.id).then(onSeen).catch(() => {});
   }, [msg.id]);
   return (
     <View style={{ flex: 1, flexDirection: "row", gap: 32 }}>

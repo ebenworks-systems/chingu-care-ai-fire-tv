@@ -282,6 +282,7 @@ function Shell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
               refresh();
             }}
             onHome={() => setScreen({ name: "home" })}
+            onSeen={refresh}
           />
         )}
       </View>
