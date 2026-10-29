@@ -45,6 +45,29 @@ ${REJECTS}
 ${END}
 `;
 
+/** build.gradle's text with any earlier block taken out and the current one added at the end. */
+function withBlock(src) {
+  const start = src.indexOf(MARKER);
+  if (start !== -1) {
+    // An earlier block ends at its end marker. The first version had none: its block ended at the
+    // first line after the marker that is a lone "}", and nothing after that line is taken.
+    let stop;
+    const end = src.indexOf(END, start);
+    if (end !== -1) {
+      stop = end + END.length;
+    } else {
+      const close = /\n\}[^\S\n]*(?=\n|$)/g;
+      close.lastIndex = start;
+      const m = close.exec(src);
+      stop = m ? m.index + m[0].length : src.length;
+    }
+    if (src[stop] === "\n") stop += 1;
+    const cut = src.lastIndexOf("\n", start);
+    src = src.slice(0, cut === -1 ? start : cut + 1) + src.slice(stop);
+  }
+  return src.replace(/\s*$/, "\n") + BLOCK;
+}
+
 module.exports = function withOkHttpFloor(config) {
   return withAppBuildGradle(config, (cfg) => {
     if (cfg.modResults.language !== "groovy") {
@@ -52,16 +75,9 @@ module.exports = function withOkHttpFloor(config) {
         "withOkHttpFloor: android/app/build.gradle is not Groovy; the Expo template changed, update the plugin"
       );
     }
-    let src = cfg.modResults.contents;
-    const start = src.indexOf(MARKER);
-    if (start !== -1) {
-      // An earlier block: up to the end marker, or to the end of the file for the first version,
-      // which had none and was always the last thing in the file.
-      const end = src.indexOf(END, start);
-      const cut = src.lastIndexOf("\n", start);
-      src = src.slice(0, cut === -1 ? start : cut) + (end === -1 ? "" : src.slice(end + END.length + 1));
-    }
-    cfg.modResults.contents = src.replace(/\s*$/, "\n") + BLOCK;
+    cfg.modResults.contents = withBlock(cfg.modResults.contents);
     return cfg;
   });
 };
+
+module.exports.withBlock = withBlock;
