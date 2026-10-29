@@ -45,6 +45,8 @@ say "3/4 Build the TV app (release, JavaScript bundled in)"
 EXPO_TV=1 CI=1 npx expo prebuild --platform android --no-install >/dev/null
 (cd android && EXPO_PUBLIC_HUB_URL="$HUB_URL" ./gradlew -q :app:assembleRelease -PreactNativeArchitectures="$ARCHS")
 APK=android/app/build/outputs/apk/release/app-release.apk
+# No OkHttp below 4.12.1 (or a 5.x below 5.5.1): those trust the compromised eMudhra certificates (EBE-7061).
+python3 tools/check_okhttp.py "$APK" >/dev/null || { python3 tools/check_okhttp.py "$APK"; exit 1; }
 
 say "4/4 Install and open on $DEVICE"
 adb -s "$DEVICE" install -r "$APK" >/dev/null

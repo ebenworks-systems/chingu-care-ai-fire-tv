@@ -10,6 +10,7 @@ A Fire TV (Fire OS and Android TV) app for Chingu Care AI, built for the Build, 
 
 - `./run-demo.sh` starts the hub, builds the release app and installs it on the first adb device. Without `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` the hub's scripted companion answers.
 - Development: the hub with `cd hub && .venv/bin/uvicorn server:app --port 8797`, Metro with `npm start`, the app with `npm run android` (needs `adb reverse tcp:8797 tcp:8797`).
+- Every APK carries OkHttp 4.12.1 or later (`plugins/withOkHttpFloor.js`, EBE-7061): `python3 tools/check_okhttp.py <apk>` reads it from the DEX and fails below it; `./run-demo.sh` runs it after the build. `npm run android` reuses an existing android/ folder, so run `npm run prebuild` first if that folder predates the plugin.
 - `npm test` runs the hub tests (pytest); the kit's tests run in the tv-care-kit repository. `npx tsc --noEmit` type-checks. Run both before each commit.
 - The emulator is our own Android TV AVD (API 30, the Android version Fire OS 8 is built on), started headless with `-grpc 8566` when the film needs the microphone.
 - The film: `tools/video/murf.py` (Murf takes), `tools/video/record.cjs` (one take of the TV and the family page), `tools/video/inject_mic.py` (the parent's answers into the emulator's microphone), `tools/video/slides.py`, `tools/video/compose.py`. Films are not committed.
