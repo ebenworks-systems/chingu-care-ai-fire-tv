@@ -88,7 +88,7 @@ def kit():
     pd = ImageDraw.Draw(panel)
     pd.text((36, 30), "$ npm test", font=SEMI(30), fill=NAVY)
     # The kit's own tests, run from a clone of tv-care-kit (KIT_REPO, default: a sibling checkout).
-    kit = Path(os.environ.get("KIT_REPO", ROOT.parent.parent / "Open Source Projects" / "tv-care-kit"))
+    kit = Path(os.environ.get("KIT_REPO", ROOT.parent.parent / "open-source" / "tv-care-kit"))
     out = subprocess.run(["node", "--test", *sorted(str(p) for p in (kit / "test").glob("*.test.ts"))],
                          capture_output=True, text=True, cwd=kit).stdout.splitlines()
     oks = [line for line in out if line.startswith("ok ")][:9]
