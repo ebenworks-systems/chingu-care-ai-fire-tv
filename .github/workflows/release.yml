@@ -1,0 +1,65 @@
+name: Release
+
+# Makes the GitHub release for a version tag and attaches the signed APK.
+# The APK is built and signed on the workstation (it is not built in CI) and
+# published first on the GitLab release; this run downloads it from there,
+# checks its SHA-256 against the value given, and attaches it here.
+#
+#   gh workflow run release.yml -f tag=v1.1.1 \
+#     -f apk_url=<the APK's link on the GitLab release> -f apk_sha256=<sha256>
+#
+# The tag must already be on GitHub and must match "version" in package.json.
+# The notes are docs/releases/<tag>.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag, for example v1.1.1"
+        required: true
+      apk_url:
+        description: "HTTPS link to the APK on the GitLab release"
+        required: true
+      apk_sha256:
+        description: "SHA-256 of the APK"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: check the inputs, the version and the APK
+        env:
+          TAG: ${{ inputs.tag }}
+          APK_URL: ${{ inputs.apk_url }}
+          APK_SHA256: ${{ inputs.apk_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "bad tag: $TAG"; exit 1; }
+          [[ "$APK_URL" =~ ^https://gitlab\.com/ ]] || { echo "the APK must come from gitlab.com"; exit 1; }
+          [[ "$APK_SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "bad sha256"; exit 1; }
+          ver="$(jq -r .version package.json)"
+          test "${TAG#v}" = "$ver" || { echo "tag $TAG != package.json $ver"; exit 1; }
+          test -f "docs/releases/$TAG.md" || { echo "no notes at docs/releases/$TAG.md"; exit 1; }
+          name="chingu-care-ai-tv-${TAG#v}.apk"
+          curl -fsSL --proto '=https' -o "$name" "$APK_URL"
+          echo "$APK_SHA256  $name" | sha256sum -c -
+          echo "APK_NAME=$name" >> "$GITHUB_ENV"
+
+      - name: make the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" "$APK_NAME" --verify-tag \
+            --title "Chingu Care AI on Fire TV ${TAG#v}" \
+            --notes-file "docs/releases/$TAG.md"
